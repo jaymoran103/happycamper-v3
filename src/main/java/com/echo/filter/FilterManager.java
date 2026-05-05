@@ -138,7 +138,7 @@ public class FilterManager {
 
         if (roster.hasFeature("program")){
             addFilter(new SortedProgramFilter());
-            // addFilter(new CamperRoundsFilter()); Disabling, redundant now
+            // addFilter(new CamperRoundsFilter()); Deprecated alternative, keeping in case its helpful for assertion-based validation feature
         }
         if (roster.hasFeature("preference")) {
             addFilter(new PreferenceFilter());

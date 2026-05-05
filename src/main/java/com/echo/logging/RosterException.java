@@ -3,7 +3,7 @@ package com.echo.logging;
 import java.io.File;
 import java.util.List;
 
-import com.echo.HappyCamper;
+// import com.echo.HappyCamper; — Removing dependency on desktop entry point for control over logging. FUTURE: Will replace with SLF4J
 
 /**
  * Exception class for roster-related errors with user-friendly information.
@@ -295,8 +295,7 @@ public class RosterException extends Exception {
      * @param e
      */
     public static void conditionalPrint(Exception e){
-        if (HappyCamper.PRINT_LOGGED_ERRORS){
-            e.printStackTrace();
-        }
+        // FUTURE: replace with SLF4J logger call
+        e.printStackTrace();
     }
 }

@@ -12,10 +12,14 @@ import com.echo.ui.filter.CollapsibleFilterPanel;
 import com.echo.ui.filter.FilterPanelFactory;
 
 /**
- * Filter for campers, based on number of rounds assigned.
- * Somewhat redundant, but does job of assignmet filter with half the boxes
- * FUTURE - Add support for more than 3 rounds
+ * 
+ * DEPRECATED - Use AssignmentFilter instead, which is more flexible and can be used for both campers and staff.
+ * Keeping for now in case the functionality is helpful for assertion-based validation feature.
+ * 
+ * Filter for campers, based on number of rounds assigned. Redundant with AssignmentFilter, but provides key functionality as a standalone filter.
+ * FUTURE - uses magic number for rounds assigned - should be based on max_rounds field in roster header. Will be better defined in later config consolidation step
  */
+@Deprecated
 public class CamperRoundsFilter implements RosterFilter {
     private static final String FILTER_ID = "camper-rounds";
     private static final String FILTER_NAME = "Camper Filter";

@@ -12,6 +12,7 @@ import com.echo.domain.RosterHeader;
 import com.echo.feature.ActivityFeature;
 import com.echo.feature.MedicalFeature;
 import com.echo.feature.PreferenceFeature;
+import com.echo.feature.ProgramFeature;
 import com.echo.feature.RosterFeature;
 import com.echo.feature.SwimLevelFeature;
 import com.echo.filter.FilterManager;
@@ -55,15 +56,7 @@ public class RosterService {
         availableFeatures = new ArrayList<>();
         availableFeatures.add(new ActivityFeature());
 
-        // Try to add ProgramFeature if available
-        try {
-            Class<?> programFeatureClass = Class.forName("com.echo.feature.ProgramFeature");
-            RosterFeature programFeature = (RosterFeature) programFeatureClass.getDeclaredConstructor().newInstance();
-            availableFeatures.add(programFeature);
-        } catch (Exception e) {
-            System.out.println("ProgramFeature not available: " + e.getMessage());
-            // Continue without ProgramFeature
-        }
+        availableFeatures.add(new ProgramFeature());
 
         availableFeatures.add(new PreferenceFeature());
         availableFeatures.add(new SwimLevelFeature());
