@@ -12,6 +12,7 @@ import javax.swing.JScrollPane;
 
 import com.echo.domain.EnhancedRoster;
 import com.echo.filter.FilterManager;
+import com.echo.filter.FilterPanelDescriptor;
 import com.echo.filter.RosterFilter;
 
 /**
@@ -89,8 +90,9 @@ public class FilterSidebar extends JPanel {
 
         //Otherwise, create and add the filter panel
         try {
-            // Create panel
-            CollapsibleFilterPanel panel = filter.createFilterPanel(roster);
+            // Create panel from descriptor
+            FilterPanelDescriptor descriptor = filter.getFilterPanelDescriptor(roster);
+            CollapsibleFilterPanel panel = FilterPanelFactory.createFromDescriptor(descriptor);
 
             if (panel != null) {
                 filterPanels.put(filter.getFilterId(), panel);

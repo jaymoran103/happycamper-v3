@@ -8,8 +8,7 @@ import java.util.function.BiConsumer;
 import com.echo.domain.Camper;
 import com.echo.domain.RosterHeader;
 import com.echo.filter.option.AssignmentFilterOption;
-import com.echo.ui.filter.CollapsibleFilterPanel;
-import com.echo.ui.filter.FilterPanelFactory;
+import com.echo.filter.option.FilterOption;
 
 /**
  * Filter for assignment-based filtering.
@@ -84,7 +83,7 @@ public class AssignmentFilter implements RosterFilter {
     }
 
     @Override
-    public CollapsibleFilterPanel createFilterPanel() {
+    public FilterPanelDescriptor getFilterPanelDescriptor() {
         // Create a map of enum options to their current states
         Map<AssignmentFilterOption, Boolean> optionStates = new EnumMap<>(AssignmentFilterOption.class);
 
@@ -95,11 +94,10 @@ public class AssignmentFilter implements RosterFilter {
         }
 
         // Create a callback for when options are toggled
-        BiConsumer<AssignmentFilterOption, Boolean> callback = (option, state) -> {
-            setRoundVisible(option.getRoundCount(), state);
+        BiConsumer<FilterOption, Boolean> callback = (option, state) -> {
+            setRoundVisible(((AssignmentFilterOption) option).getRoundCount(), state);
         };
 
-        // Use the factory to create the panel
-        return FilterPanelFactory.createEnumPanel(FILTER_NAME, optionStates, callback);
+        return new FilterPanelDescriptor(FILTER_NAME, optionStates, callback);
     }
 }

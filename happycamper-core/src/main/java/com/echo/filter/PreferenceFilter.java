@@ -7,9 +7,8 @@ import java.util.function.BiConsumer;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.RosterHeader;
+import com.echo.filter.option.FilterOption;
 import com.echo.filter.option.PreferenceFilterOption;
-import com.echo.ui.filter.CollapsibleFilterPanel;
-import com.echo.ui.filter.FilterPanelFactory;
 
 /**
  * Filter for preference-based filtering.
@@ -90,21 +89,20 @@ public class PreferenceFilter implements RosterFilter {
     }
 
     @Override
-    public CollapsibleFilterPanel createFilterPanel() {
+    public FilterPanelDescriptor getFilterPanelDescriptor() {
         // Create a map of enum options to their current states
         Map<PreferenceFilterOption, Boolean> optionStates = new EnumMap<>(PreferenceFilterOption.class);
         optionStates.put(PreferenceFilterOption.SHOW_WITH_UNREQUESTED, showCampersWithUnrequestedActivities);
         optionStates.put(PreferenceFilterOption.SHOW_WITHOUT_UNREQUESTED, showCampersWithoutUnrequestedActivities);
 
         // Create a callback for when options are toggled
-        BiConsumer<PreferenceFilterOption, Boolean> callback = (option, state) -> {
-            switch (option) {
+        BiConsumer<FilterOption, Boolean> callback = (option, state) -> {
+            switch ((PreferenceFilterOption) option) {
                 case SHOW_WITH_UNREQUESTED -> setShowCampersWithUnrequestedActivities(state);
                 case SHOW_WITHOUT_UNREQUESTED -> setShowCampersWithoutUnrequestedActivities(state);
             }
         };
 
-        // Use the factory to create the panel
-        return FilterPanelFactory.createEnumPanel(FILTER_NAME, optionStates, callback);
+        return new FilterPanelDescriptor(FILTER_NAME, optionStates, callback);
     }
 }

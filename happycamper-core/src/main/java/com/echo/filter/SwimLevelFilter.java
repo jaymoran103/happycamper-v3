@@ -7,9 +7,8 @@ import java.util.function.BiConsumer;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.RosterHeader;
+import com.echo.filter.option.FilterOption;
 import com.echo.filter.option.SwimLevelFilterOption;
-import com.echo.ui.filter.CollapsibleFilterPanel;
-import com.echo.ui.filter.FilterPanelFactory;
 
 /**
  * Filter for swim-compatibility-based filtering.
@@ -90,21 +89,20 @@ public class SwimLevelFilter implements RosterFilter {
     }
 
     @Override
-    public CollapsibleFilterPanel createFilterPanel() {
+    public FilterPanelDescriptor getFilterPanelDescriptor() {
         // Create a map of enum options to their current states
         Map<SwimLevelFilterOption, Boolean> optionStates = new EnumMap<>(SwimLevelFilterOption.class);
         optionStates.put(SwimLevelFilterOption.SHOW_COMPATIBLE, showCompatibleCampers);
         optionStates.put(SwimLevelFilterOption.SHOW_INCOMPATIBLE, showIncompatibleCampers);
 
         // Create a callback for when options are toggled
-        BiConsumer<SwimLevelFilterOption, Boolean> callback = (option, state) -> {
-            switch (option) {
+        BiConsumer<FilterOption, Boolean> callback = (option, state) -> {
+            switch ((SwimLevelFilterOption) option) {
                 case SHOW_COMPATIBLE -> setShowCompatibleCampers(state);
                 case SHOW_INCOMPATIBLE -> setShowIncompatibleCampers(state);
             }
         };
 
-        // Use the factory to create the panel
-        return FilterPanelFactory.createEnumPanel(FILTER_NAME, optionStates, callback);
+        return new FilterPanelDescriptor(FILTER_NAME, optionStates, callback);
     }
 }

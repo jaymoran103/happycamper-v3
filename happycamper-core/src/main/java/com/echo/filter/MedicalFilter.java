@@ -7,9 +7,8 @@ import java.util.function.BiConsumer;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.RosterHeader;
+import com.echo.filter.option.FilterOption;
 import com.echo.filter.option.MedicalFilterOption;
-import com.echo.ui.filter.CollapsibleFilterPanel;
-import com.echo.ui.filter.FilterPanelFactory;
 
 /**
  * Filter for medical notes-based filtering.
@@ -90,21 +89,20 @@ public class MedicalFilter implements RosterFilter {
     }
 
     @Override
-    public CollapsibleFilterPanel createFilterPanel() {
+    public FilterPanelDescriptor getFilterPanelDescriptor() {
         // Create a map of enum options to their current states
         Map<MedicalFilterOption, Boolean> optionStates = new EnumMap<>(MedicalFilterOption.class);
         optionStates.put(MedicalFilterOption.SHOW_WITH_MEDICAL_NOTES, showCampersWithMedicalNotes);
         optionStates.put(MedicalFilterOption.SHOW_WITHOUT_MEDICAL_NOTES, showCampersWithoutMedicalNotes);
 
         // Create a callback for when options are toggled
-        BiConsumer<MedicalFilterOption, Boolean> callback = (option, state) -> {
-            switch (option) {
+        BiConsumer<FilterOption, Boolean> callback = (option, state) -> {
+            switch ((MedicalFilterOption) option) {
                 case SHOW_WITH_MEDICAL_NOTES -> setShowCampersWithMedicalNotes(state);
                 case SHOW_WITHOUT_MEDICAL_NOTES -> setShowCampersWithoutMedicalNotes(state);
             }
         };
 
-        // Use the factory to create the panel
-        return FilterPanelFactory.createEnumPanel(FILTER_NAME, optionStates, callback);
+        return new FilterPanelDescriptor(FILTER_NAME, optionStates, callback);
     }
 }

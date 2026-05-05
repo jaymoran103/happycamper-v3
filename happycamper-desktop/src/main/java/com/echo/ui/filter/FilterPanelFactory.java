@@ -3,7 +3,11 @@ package com.echo.ui.filter;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
+import java.util.Map;
+
+import com.echo.filter.FilterPanelDescriptor;
+import com.echo.filter.option.FilterOption;
+
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -386,6 +390,41 @@ public class FilterPanelFactory {
                 panel.notifyFilterChanged();
             });
 
+            checkboxPanel.add(checkBox);
+        }
+
+        panel.addContent(contentPanel);
+        return panel;
+    }
+
+    /**
+     * Creates a {@link CollapsibleFilterPanel} from a {@link FilterPanelDescriptor}
+     * produced by a core {@link com.echo.filter.RosterFilter} implementation.
+     *
+     * @param descriptor The descriptor carrying title, option states, and callback.
+     * @return A fully configured collapsible filter panel.
+     */
+    public static CollapsibleFilterPanel createFromDescriptor(FilterPanelDescriptor descriptor) {
+        CollapsibleFilterPanel panel = new CollapsibleFilterPanel(descriptor.getTitle());
+
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(FilterSidebar.FILTER_COLOR_EXPANDED);
+
+        JPanel checkboxPanel = new JPanel();
+        checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.Y_AXIS));
+        checkboxPanel.setBackground(FilterSidebar.FILTER_COLOR_EXPANDED);
+
+        contentPanel.add(checkboxPanel, BorderLayout.NORTH);
+
+        for (Map.Entry<? extends FilterOption, Boolean> entry : descriptor.getOptionStates().entrySet()) {
+            FilterOption option = entry.getKey();
+            boolean state = entry.getValue();
+
+            JCheckBox checkBox = new HoverCheckBox(option.getLabel(), state);
+            checkBox.addActionListener(e -> {
+                descriptor.getCallback().accept(option, checkBox.isSelected());
+                panel.notifyFilterChanged();
+            });
             checkboxPanel.add(checkBox);
         }
 

@@ -2,7 +2,6 @@ package com.echo.filter;
 
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
-import com.echo.ui.filter.CollapsibleFilterPanel;
 
 /**
  * Interface for roster filters.
@@ -32,21 +31,21 @@ public interface RosterFilter {
     String getFilterName();
 
     /**
-     * Creates a UI panel for this filter.
-     * Default implementation, delegates to the no-argument createFilterPanel method.
-     * Implementations that expect EnhancedRoster as an argument should set it as a field themselves
-     * @param roster The roster to filter
-     * @return A panel for configuring this filter
+     * Returns a descriptor carrying the data the UI layer needs to build a filter panel for this filter.
+     * Default implementation delegates to the no-argument variant.
+     * Implementations that require an EnhancedRoster should set it as a field.
+     *
+     * @param roster The roster (may be used by some filters)
+     * @return A {@link FilterPanelDescriptor} describing this filter's panel
      */
-    default CollapsibleFilterPanel createFilterPanel(EnhancedRoster roster) {
-        return createFilterPanel();
+    default FilterPanelDescriptor getFilterPanelDescriptor(EnhancedRoster roster) {
+        return getFilterPanelDescriptor();
     }
 
     /**
-     * Creates a UI panel for this filter without requiring a roster.
-     * This method should be implemented by all filters to create their UI.
+     * Returns a descriptor carrying the data the UI layer needs to build a filter panel for this filter.
      *
-     * @return A panel for configuring this filter
+     * @return A {@link FilterPanelDescriptor} describing this filter's panel
      */
-    CollapsibleFilterPanel createFilterPanel();
+    FilterPanelDescriptor getFilterPanelDescriptor();
 }
