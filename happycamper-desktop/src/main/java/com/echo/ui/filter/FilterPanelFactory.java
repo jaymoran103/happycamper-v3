@@ -3,6 +3,7 @@ package com.echo.ui.filter;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import com.echo.filter.FilterPanelDescriptor;

@@ -1,6 +1,8 @@
 package com.echo.filter;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JCheckBox;
@@ -8,6 +10,8 @@ import javax.swing.JCheckBox;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
+import com.echo.feature.ProgramFeature;
+import com.echo.filter.option.FilterOption;
 import com.echo.ui.filter.CollapsibleFilterPanel;
 import com.echo.ui.filter.ProgramFilterBuilder;
 
@@ -61,12 +65,44 @@ public class SortedProgramFilter implements RosterFilter {
     }
 
     @Override
+    public FilterPanelDescriptor getFilterPanelDescriptor(EnhancedRoster roster) {
+        this.roster = roster;
+        // Pre-populate programVisibility from roster programs
+        for (List<String> programs : ProgramFeature.getProgramsByRoundCount(roster).values()) {
+            for (String program : programs) {
+                programVisibility.putIfAbsent(program, true);
+            }
+        }
+        return getFilterPanelDescriptor();
+    }
+
+    @Override
+    public FilterPanelDescriptor getFilterPanelDescriptor() {
+        // Wrap each dynamic program string as a FilterOption for the descriptor
+        Map<FilterOption, Boolean> opts = new LinkedHashMap<>();
+        for (Map.Entry<String, Boolean> entry : programVisibility.entrySet()) {
+            final String name = entry.getKey();
+            opts.put(new FilterOption() {
+                @Override public String getLabel() { return name; }
+                @Override public boolean getDefaultState() { return true; }
+            }, entry.getValue());
+        }
+        return new FilterPanelDescriptor(FILTER_NAME, opts,
+            (option, state) -> setProgramVisible(option.getLabel(), state));
+    }
+
+    /**
+     * Creates a Swing panel via ProgramFilterBuilder (legacy/desktop-direct path).
+     * Not an interface method; retained for any direct Swing caller.
+     */
     public CollapsibleFilterPanel createFilterPanel(EnhancedRoster roster) {
         this.roster = roster;
         return createFilterPanel();
     }
 
-    @Override
+    /**
+     * Creates a Swing panel via ProgramFilterBuilder (legacy/desktop-direct path).
+     */
     public CollapsibleFilterPanel createFilterPanel() {
         // Delegate panel creation to the ProgramFilterBuilder
         return ProgramFilterBuilder.createFilterPanel(

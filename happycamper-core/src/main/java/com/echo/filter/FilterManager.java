@@ -136,10 +136,10 @@ public class FilterManager {
         // Always add the assignment filter to show basic round counts
         addFilter(new AssignmentFilter());
 
-        if (roster.hasFeature("program")){
-            addFilter(new SortedProgramFilter());
-            // addFilter(new CamperRoundsFilter()); Deprecated alternative, keeping in case its helpful for assertion-based validation feature
-        }
+        // NOTE: Phase 1: SortedProgramFilter is Swing-coupled and lives in happycamper-desktop.
+        // Desktop callers must add it manually after this method (see MainWindow.setRoster).
+        // FUTURE: Phase 2 will introduce a proper filter-registration hook to remove this note.
+        // addFilter(new CamperRoundsFilter()); Deprecated alternative, keeping in case its helpful for assertion-based validation feature
         if (roster.hasFeature("preference")) {
             addFilter(new PreferenceFilter());
         }

@@ -17,6 +17,7 @@ import com.echo.HappyCamper;
 import com.echo.automation.TestPreset;
 import com.echo.domain.EnhancedRoster;
 import com.echo.filter.FilterManager;
+import com.echo.filter.SortedProgramFilter;
 import com.echo.service.RosterService;
 import com.echo.ui.component.RosterTable;
 import com.echo.ui.dialog.ColumnVisibilityDialog;
@@ -130,6 +131,11 @@ public class MainWindow extends JFrame {
         //System.out.println("MainWindow.setRoster: Creating filter manager");
         filterManager = new FilterManager();
         filterManager.createFiltersForRoster(roster);
+        // Desktop-specific: SortedProgramFilter is Swing-coupled and excluded from core.
+        // FUTURE: Phase 2 will replace this with a proper registration hook.
+        if (roster.hasFeature("program")) {
+            filterManager.addFilter(new SortedProgramFilter());
+        }
         //System.out.println("MainWindow.setRoster: Filter manager created with " + filterManager.getFilterCount() + " filters");
 
         // Reset column visibility dialog's cached settings, ensuring it matches the new roster
