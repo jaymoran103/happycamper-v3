@@ -20,7 +20,6 @@ import javax.swing.border.EmptyBorder;
 
 import com.echo.domain.EnhancedRoster;
 import com.echo.feature.ProgramFeature;
-import com.echo.filter.FilterManager;
 import com.echo.filter.SortedProgramFilter;
 import com.echo.ui.elements.HoverCheckBox;
 
@@ -177,8 +176,6 @@ public class ProgramFilterBuilder {
             checkbox.addItemListener(e -> {
                 filter.setProgramEnabled(program, e.getStateChange() == ItemEvent.SELECTED);
                 updateSectionHeaderState(sectionCheckbox, checkboxMap);
-                // Notify FilterManager to update the table
-                FilterManager.updateTable(checkbox);
                 if (updateCallback != null) {
                     updateCallback.run();
                 }
@@ -206,9 +203,6 @@ public class ProgramFilterBuilder {
                     filter.setProgramEnabled(program, selected);
                 }
             }
-
-            // Notify FilterManager to update the table
-            FilterManager.updateTable(sectionCheckbox);
 
             if (updateCallback != null) {
                 updateCallback.run();

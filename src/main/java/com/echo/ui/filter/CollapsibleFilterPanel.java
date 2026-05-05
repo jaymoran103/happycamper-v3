@@ -18,8 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 
-import com.echo.filter.FilterManager;
-
 /**
  * A collapsible panel used to display filter options.
  */
@@ -212,9 +210,8 @@ public class CollapsibleFilterPanel extends JPanel {
     /**
      * Notifies that a filter has changed.
      * This method should be called whenever a filter option is changed.
-     * It will use the FilterManager to update the table.
+     * FUTURE: keeping this as a no-op stub for now, possibly to be replaced with a callback for filter-changing events.
      */
     public void notifyFilterChanged() {
-        FilterManager.updateTable(this);
     }
 }

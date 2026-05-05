@@ -1,6 +1,9 @@
 package com.echo.service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import com.echo.domain.ActivityRoster;
@@ -32,16 +35,28 @@ public class ImportService {
      * @throws RosterException if the file is invalid or an error occurs during import
      */
     public ParsedCSV importCSV(File file) throws RosterException {
-
-        // Basic file validation
         ImportFileValidator.validateBasicFile(file);
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, file.getName());
+            ImportFileValidator.validateCSVContent(parsedCSV, null, file.getName());
+            return parsedCSV;
+        } catch (IOException e) {
+            throw RosterException.create_normalWrapper("Error reading file '" + file.getName() + "': IOException", e);
+        }
+    }
 
-        // Parse the file
-        ParsedCSV parsedCSV = ImportUtils.parseFile(file);
-
-        // Validate the parsed content
-        ImportFileValidator.validateCSVFile(file, parsedCSV, null);
-
+    /**
+     * Imports data from a CSV input stream into a ParsedCSV object.
+     * This is the stream-based entry point used by the web layer.
+     *
+     * @param inputStream The stream to read
+     * @param sourceName The original source name used for error messages
+     * @return ParsedCSV object, representing each row of data as a map of header-value pairs
+     * @throws RosterException if the content is invalid or an error occurs during import
+     */
+    public ParsedCSV importCSV(InputStream inputStream, String sourceName) throws RosterException {
+        ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, sourceName);
+        ImportFileValidator.validateCSVContent(parsedCSV, null, sourceName);
         return parsedCSV;
     }
 
@@ -59,30 +74,29 @@ public class ImportService {
 
         // Basic file validation
         ImportFileValidator.validateBasicFile(file);
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, file.getName());
+            ImportFileValidator.validateCSVContent(parsedCSV, CamperRoster.getRequiredHeaders(), file.getName());
 
-        // Parse the file
-        ParsedCSV parsedCSV = ImportUtils.parseFile(file);
+            //Create roster instance to represent data as its proper type
+            CamperRoster roster = new CamperRoster();
 
-        // Validate the parsed content
-        ImportFileValidator.validateCSVFile(file, parsedCSV, CamperRoster.getRequiredHeaders());
+            // Add headers
+            for (String header : parsedCSV.getHeaderNames()) {
+                roster.addHeader(header);
+            }
 
-        //Create roster instance to represent data as its proper type
-        CamperRoster roster = new CamperRoster();
+            // Add campers
+            for (Map<String, String> row : parsedCSV.getRows()) {
+                String camperId = CamperRoster.generateCamperId(row);
+                Camper camper = new Camper(camperId, row);
+                roster.addCamper(camper);
+            }
 
-        // Add headers
-        for (String header : parsedCSV.getHeaderNames()) {
-            roster.addHeader(header);
+            return roster;
+        } catch (IOException e) {
+            throw RosterException.create_normalWrapper("Error reading file '" + file.getName() + "': IOException", e);
         }
-
-        // Add campers
-        for (Map<String, String> row : parsedCSV.getRows()) {
-            String camperId = CamperRoster.generateCamperId(row);
-            Camper camper = new Camper(camperId, row);
-            roster.addCamper(camper);
-        }
-
-        return roster;
-    
     }
 
     /**
@@ -96,33 +110,25 @@ public class ImportService {
      * @throws RosterException if the file is invalid or an error occurs during import
      */
     public ActivityRoster importActivityRoster(File file) throws RosterException {
-
-        // Basic file validation
         ImportFileValidator.validateBasicFile(file);
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, file.getName());
+            ImportFileValidator.validateCSVContent(parsedCSV, ActivityRoster.getRequiredHeaders(), file.getName());
 
-        // Parse the file
-        ParsedCSV parsedCSV = ImportUtils.parseFile(file);
+            ActivityRoster roster = new ActivityRoster();
+            for (String header : parsedCSV.getHeaderNames()) {
+                roster.addHeader(header);
+            }
+            for (Map<String, String> row : parsedCSV.getRows()) {
+                String activityId = ActivityRoster.generateCamperIdFromActivity(row);
+                Camper activity = new Camper(activityId, row);
+                roster.addCamper(activity);
+            }
 
-        // Validate the parsed content
-        ImportFileValidator.validateCSVFile(file, parsedCSV, ActivityRoster.getRequiredHeaders());
-
-        //Create roster instance to represent data as its proper type
-        ActivityRoster roster = new ActivityRoster();
-
-        // Add headers
-        for (String header : parsedCSV.getHeaderNames()) {
-            roster.addHeader(header);
+            return roster;
+        } catch (IOException e) {
+            throw RosterException.create_normalWrapper("Error reading file '" + file.getName() + "': IOException", e);
         }
-
-        // Add activities
-        for (Map<String, String> row : parsedCSV.getRows()) {
-            String activityId = ActivityRoster.generateCamperIdFromActivity(row);
-            Camper activity = new Camper(activityId, row);
-            roster.addCamper(activity);
-        }
-
-        return roster;
-        
     }
 
     /**
@@ -137,34 +143,53 @@ public class ImportService {
         return file != null && file.exists() && file.isFile() && file.canRead();
     }
 
-    // /**
-    //  * Generalized import method for any roster type.
-    //  * Not yet ready to implement - needs a commonly named key generation method
-    //  */
-    // public <T extends Roster> T importRoster(File file, Class<T> rosterClass) throws RosterException {
-    //     // Basic file validation
-    //     ImportFileValidator.validateBasicFile(file);
-    //     // Parse the file
-    //     ParsedCSV parsedCSV = ImportUtils.parseFile(file);
-    //     // Validate the parsed content
-    //     ImportFileValidator.validateCSVFile(file, parsedCSV, ActivityRoster.getRequiredHeaders());
-    //     //Create roster instance to represent data as its proper type
-    //     try {
-    //         T roster = rosterClass.getDeclaredConstructor().newInstance();
-    //         // Add headers
-    //     for (String header : parsedCSV.getHeaderNames()) {
-    //         roster.addHeader(header);
-    //     }
-    //     // Add activities
-    //     for (Map<String, String> row : parsedCSV.getRows()) {
-    //         String activityId = T.generateCamperId(row);
-    //         Camper activity = new Camper(activityId, row);
-    //         roster.addCamper(activity);
-    //     }
-    //     return roster;
-    //     } catch (Exception e) {
-    //         throw RosterException.create_normalWrapper("Failed to create roster instance: " + e.getMessage(), e);
-    //     }
-    // }
+    /**
+     * Imports a camper roster from an InputStream.
+     * The stream is expected to contain a valid camper roster CSV.
+     * This is the entry point used by the web layer (MultipartFile.getInputStream()).
+     *
+     * @param inputStream The stream to read from
+     * @param sourceName A display name for error messages, likely the original filename
+     * @return A new CamperRoster containing the imported data
+     * @throws RosterException if the content is invalid or an error occurs during import
+     */
+    public CamperRoster importCamperRoster(InputStream inputStream, String sourceName) throws RosterException {
+        ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, sourceName);
+        ImportFileValidator.validateCSVContent(parsedCSV, CamperRoster.getRequiredHeaders(), sourceName);
 
+        CamperRoster roster = new CamperRoster();
+        for (String header : parsedCSV.getHeaderNames()) {
+            roster.addHeader(header);
+        }
+        for (Map<String, String> row : parsedCSV.getRows()) {
+            String camperId = CamperRoster.generateCamperId(row);
+            roster.addCamper(new Camper(camperId, row));
+        }
+        return roster;
+    }
+
+    /**
+     * Imports an activity roster from an InputStream.
+     * The stream is expected to contain a valid activity roster CSV.
+     * This is the entry point used by the web layer (MultipartFile.getInputStream()).
+     *
+     * @param inputStream The stream to read from
+     * @param sourceName A display name for error messages, likely the original filename
+     * @return A new ActivityRoster containing the imported data
+     * @throws RosterException if the content is invalid or an error occurs during import
+     */
+    public ActivityRoster importActivityRoster(InputStream inputStream, String sourceName) throws RosterException {
+        ParsedCSV parsedCSV = ImportUtils.parseStream(inputStream, sourceName);
+        ImportFileValidator.validateCSVContent(parsedCSV, ActivityRoster.getRequiredHeaders(), sourceName);
+
+        ActivityRoster roster = new ActivityRoster();
+        for (String header : parsedCSV.getHeaderNames()) {
+            roster.addHeader(header);
+        }
+        for (Map<String, String> row : parsedCSV.getRows()) {
+            String activityId = ActivityRoster.generateCamperIdFromActivity(row);
+            roster.addCamper(new Camper(activityId, row));
+        }
+        return roster;
+    }
 }

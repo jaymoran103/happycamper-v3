@@ -1,16 +1,11 @@
 package com.echo.filter;
 
-import java.awt.Component;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JFrame;
-import javax.swing.JSplitPane;
-
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
-import com.echo.ui.component.RosterTable;
 
 /**
  * Manager for roster filters.
@@ -156,41 +151,5 @@ public class FilterManager {
         }
 
 
-    }
-
-    /**
-     * Updates the table to reflect filter changes.
-     * This should be called whenever a filter is modified.
-     *
-     * @param component Any component in the UI hierarchy
-     */
-    public static void updateTable(Component component) {
-        //System.out.println("FilterManager.updateTable called");
-
-        // Find the root window
-        Component root = component;
-        while (root != null && !(root instanceof JFrame)) {
-            root = root.getParent();
-        }
-
-        if (root instanceof JFrame) {
-            //System.out.println("Found root JFrame");
-            JFrame frame = (JFrame) root;
-            for (Component c : frame.getContentPane().getComponents()) {
-                //System.out.println("Checking component: " + c.getClass().getName());
-                if (c instanceof JSplitPane) {
-                    JSplitPane splitPane = (JSplitPane) c;
-                    Component rightComponent = splitPane.getRightComponent();
-                    //System.out.println("Right component: " + rightComponent.getClass().getName());
-                    if (rightComponent instanceof RosterTable) {
-                        //System.out.println("Found RosterTable, applying filters");
-                        ((RosterTable) rightComponent).applyFilters();
-                        break;
-                    }
-                }
-            }
-        } else {
-            //System.out.println("Could not find root JFrame");
-        }
     }
 }

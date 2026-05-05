@@ -1,8 +1,11 @@
 package com.echo.service;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,33 +45,50 @@ public class ExportService {
             throw new IllegalArgumentException("Export settings and destination file must not be null");
         }
 
-        List<String> headers;
-        FilterManager effectiveFilterManager = filterManager;
+        List<String> headers = settings.getShowAllColumns() ? roster.getAllHeaders() : roster.getVisibleHeaders();
+        FilterManager effectiveFilterManager = settings.getShowAllRows() ? null : filterManager;
 
-        
-        headers = settings.getShowAllColumns() ? roster.getAllHeaders() : roster.getVisibleHeaders();
-        effectiveFilterManager = settings.getShowAllRows() ? null : filterManager;
-
-        // Export with the determined settings
-        exportToCSV(roster, effectiveFilterManager, headers, settings.getDestinationFile(),settings.getUseEmptyPlaceholder());
+        File destination = settings.getDestinationFile();
+        try (FileOutputStream fos = new FileOutputStream(destination)) {
+            exportToStream(roster, effectiveFilterManager, headers, fos, settings.getUseEmptyPlaceholder(), destination.getName());
+        } catch (IOException e) {
+            throw RosterException.create_normalWrapper("Error exporting to CSV with file " + destination.getName(), e);
+        }
     }
 
     /**
-     * Exports a roster to a CSV file with customizable filtering and headers.
-     * This is the main export method that other export methods delegate to.
-     * It writes the roster data to a CSV file, applying any filters and including
-     * only the specified headers.
+     * Exports a roster to an OutputStream using the specified ExportConfig.
+     * This is the stream-based entry point, to be used by the web layer.
+     *
+     * @param roster The roster containing the data to export
+     * @param filterManager The filter manager to apply (can be null for no filtering)
+     * @param config The export configuration (core-safe, no File references)
+     * @param outputStream The stream to write CSV data to; this method closes the stream when done
+     * @throws RosterException if an error occurs during the export process
+     */
+    public void exportRosterToCSV(EnhancedRoster roster, FilterManager filterManager, ExportConfig config, OutputStream outputStream) throws RosterException {
+        if (config == null) {
+            throw new IllegalArgumentException("ExportConfig must not be null");
+        }
+        List<String> headers = config.getShowAllColumns() ? roster.getAllHeaders() : roster.getVisibleHeaders();
+        FilterManager effectiveFilterManager = config.getShowAllRows() ? null : filterManager;
+        exportToStream(roster, effectiveFilterManager, headers, outputStream, config.getUseEmptyPlaceholder(), "stream");
+    }
+
+    /**
+     * Core export logic shared by the File-based and OutputStream-based public methods.
+     * Writes the roster data to the provided OutputStream as UTF-8 encoded CSV.
      *
      * @param roster The roster containing the data to export
      * @param filterManager The filter manager to apply (can be null for no filtering)
      * @param visibleHeaders The list of headers to include in the export
-     * @param file The destination file to write the CSV data to
+     * @param outputStream The stream to write to; the caller manages closing
      * @param useEmptyPlaceholder Whether to use a placeholder for empty values
+     * @param sourceName A display name used in error messages
      * @throws RosterException if an error occurs during the export process
      */
-    private void exportToCSV(EnhancedRoster roster, FilterManager filterManager, List<String> visibleHeaders, File file, boolean useEmptyPlaceholder) throws RosterException {
-        try (FileWriter writer = new FileWriter(file);
-             // Create a CSV printer with the specified headers
+    private void exportToStream(EnhancedRoster roster, FilterManager filterManager, List<String> visibleHeaders, OutputStream outputStream, boolean useEmptyPlaceholder, String sourceName) throws RosterException {
+        try (Writer writer = new OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8);
              CSVPrinter printer = new CSVPrinter(writer,
                  CSVFormat.DEFAULT.builder()
                      .setHeader(visibleHeaders.toArray(new String[0]))
@@ -95,7 +115,7 @@ public class ExportService {
                 }
             }
         } catch (IOException e) {
-            throw RosterException.create_normalWrapper("Error exporting to CSV with file "+file.getName(), e);
+            throw RosterException.create_normalWrapper("Error exporting to CSV (" + sourceName + ")", e);
         }
     }
 

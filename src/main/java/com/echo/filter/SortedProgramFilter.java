@@ -75,7 +75,7 @@ public class SortedProgramFilter implements RosterFilter {
             FILTER_NAME,
             programCheckboxesByRoundCount,
             sectionHeaderCheckboxes,
-            () -> {} // Empty callback since FilterManager.updateTable is called directly. FUTURE - look for more elegant way to do this
+            () -> {} // FUTURE: wire a real update callback here; currently a no-op placeholder
         );
     }
 

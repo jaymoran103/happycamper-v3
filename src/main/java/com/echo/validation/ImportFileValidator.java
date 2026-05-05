@@ -114,77 +114,68 @@ public class ImportFileValidator {
      * @throws RosterException if any validation step fails, with a specific error message
      */
     public static void validateCSVFile(File file, ParsedCSV parsedCSV, List<String> requiredHeaders) throws RosterException {
-        validateHasContent(file, parsedCSV);
-        validateHeaders(file, parsedCSV, requiredHeaders);
-        validateRowConsistency(file, parsedCSV);
+        validateCSVContent(parsedCSV, requiredHeaders, file.getName());
     }
 
     /**
-     * Checks that the given file has content (headers and data rows).
+     * Validates parsed CSV content using a source name string instead of a File reference.
+     * This is the stream-compatible validation entry point used by the web layer.
      *
-     * @param file The file to check
      * @param parsedCSV The parsed CSV data
-     * @throws RosterException if the file has no headers or no data rows
+     * @param requiredHeaders List of required headers (can be null for no header requirements)
+     * @param sourceName A display name for the source used in error messages (e.g. the original filename)
+     * @throws RosterException if content is empty, missing required headers, or has inconsistent rows
      */
-    private static void validateHasContent(File file, ParsedCSV parsedCSV) throws RosterException {
+    public static void validateCSVContent(ParsedCSV parsedCSV, List<String> requiredHeaders, String sourceName) throws RosterException {
+        validateHasContent(sourceName, parsedCSV);
+        if (requiredHeaders != null && !requiredHeaders.isEmpty()) {
+            validateHeaders(sourceName, parsedCSV, requiredHeaders);
+        }
+        validateRowConsistency(sourceName, parsedCSV);
+    }
+
+    /**
+     * Checks that the given source has content (headers and data rows).
+     */
+    private static void validateHasContent(String sourceName, ParsedCSV parsedCSV) throws RosterException {
         if (parsedCSV.getHeaderNames().isEmpty()) {
-            throw RosterException.noData(file.getName(), false);
+            throw RosterException.noData(sourceName, false);
         }
-
         if (parsedCSV.isEmpty()) {
-            throw RosterException.noData(file.getName(), true);
+            throw RosterException.noData(sourceName, true);
         }
     }
 
     /**
-     * Validates that a CSV file contains all the required headers using an existing parser.
-     *
-     * @param file The file to validate
-     * @param parsedCSV The parsed CSV data
-     * @param requiredHeaders List of header names that must be present in the file
-     * @throws RosterException if the file is invalid or missing any required headers
+     * Validates that a CSV source contains all the required headers.
      */
-    public static void validateHeaders(File file, ParsedCSV parsedCSV, List<String> requiredHeaders) throws RosterException {
-        if (requiredHeaders == null || requiredHeaders.isEmpty()) {
-            return;
-        }
-
+    private static void validateHeaders(String sourceName, ParsedCSV parsedCSV, List<String> requiredHeaders) throws RosterException {
         Set<String> fileHeaders = new HashSet<>(parsedCSV.getHeaderNames());
         List<String> missingHeaders = new ArrayList<>();
-
         for (String header : requiredHeaders) {
             if (!fileHeaders.contains(header)) {
                 missingHeaders.add(header);
             }
         }
-
         if (!missingHeaders.isEmpty()) {
-            throw RosterException.missingHeaders(file,missingHeaders);
+            throw RosterException.missingHeaders(sourceName, missingHeaders);
         }
     }
 
     /**
-     * Validates that all rows in a CSV file have consistent lengths using an existing parser.
-     *
-     * @param file The file to validate
-     * @param parsedCSV The parsed CSV data
-     * @throws RosterException if the file is invalid or contains rows with inconsistent lengths
+     * Validates that all rows in a CSV source have consistent lengths.
      */
-    public static void validateRowConsistency(File file, ParsedCSV parsedCSV) throws RosterException {
+    private static void validateRowConsistency(String sourceName, ParsedCSV parsedCSV) throws RosterException {
         int headerCount = parsedCSV.getHeaderNames().size();
-        int rowNumber = 1; // Start at 1 because header is row 0
-
-        for (Map<String,String> record : parsedCSV.getRows()) {
+        int rowNumber = 1;
+        for (Map<String, String> record : parsedCSV.getRows()) {
             rowNumber++;
             int cellCount = record.size();
-
             if (cellCount != headerCount) {
-                throw RosterException.create_malformedRowException(
-                    file.getName(), headerCount, cellCount, rowNumber);
+                throw RosterException.create_malformedRowException(sourceName, headerCount, cellCount, rowNumber);
             }
         }
     }
-
 
     public static ValidationResult validateImportFile(File file){
         try {

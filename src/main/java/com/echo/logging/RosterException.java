@@ -173,7 +173,18 @@ public class RosterException extends Exception {
      * @return DetailedRosterException instance representing this issue
      */
     public static DetailedRosterException missingHeaders(File f,List<String> headers) {
-        String errorSummary = "File "+f.getName()+" lacks required headers";
+        return missingHeaders(f.getName(), headers);
+    }
+
+    /**
+     * Stream-compatible variant that identifies the source by name rather than a File object.
+     *
+     * @param sourceName Display name for the source, likely a file name or stream label
+     * @param headers List of outstanding headers to display
+     * @return DetailedRosterException instance representing this issue
+     */
+    public static DetailedRosterException missingHeaders(String sourceName, List<String> headers) {
+        String errorSummary = "File "+sourceName+" lacks required headers";
         String errorExplanation = "Check the user guide for more context";
         String[] headerArray = new String[]{"Missing Header", "Required For"};
         String[][] data = new String[headers.size()][2];
