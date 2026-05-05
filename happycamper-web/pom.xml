@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.echo</groupId>
+        <artifactId>happy-camper-parent</artifactId>
+        <version>2.2</version>
+    </parent>
+
+    <artifactId>happycamper-web</artifactId>
+    <packaging>jar</packaging>
+
+    <!-- Phase 1: stub only. No source files or Spring Boot dependencies yet.
+         Spring Boot and web code added in Phase 4. -->
+
+    <dependencies>
+        <dependency>
+            <groupId>com.echo</groupId>
+            <artifactId>happycamper-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>
