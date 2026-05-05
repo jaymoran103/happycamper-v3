@@ -4,6 +4,7 @@ import java.awt.Window;
 
 import com.echo.domain.DataConstants;
 import com.echo.service.ViewSettings;
+import com.echo.ui.component.TableColors;
 import com.echo.ui.selector.BooleanSelector;
 import com.echo.ui.selector.InputSelector;
 
@@ -85,6 +86,8 @@ public class ViewSettingsDialog extends InputsDialog {
 
         // Apply settings immediately
         cachedSettings.apply();
+        TableColors.setAlternateShades(cachedSettings.isUseRowContrast());
+        TableColors.setHighlightEmptyData(cachedSettings.isHighlightEmptyData());
     }
 
     /**

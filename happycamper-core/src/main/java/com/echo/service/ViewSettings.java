@@ -1,7 +1,6 @@
 package com.echo.service;
 
 import com.echo.domain.DataConstants;
-import com.echo.ui.component.TableColors;
 
 /**
  * Settings for the table view display.
@@ -72,11 +71,6 @@ public class ViewSettings {
     public void apply() {
         // Update DataConstants placeholder setting
         DataConstants.updateUseDisplayPlaceholder(useDisplayPlaceholder);
-
-        // Update TableColors row contrast setting
-        TableColors.setAlternateShades(useRowContrast);
-
-        // Update TableColors empty data highlighting setting
-        TableColors.setHighlightEmptyData(highlightEmptyData);
+        //  NOTE: TableColors calls (setAlternateShades, setHighlightEmptyData) are applied by the desktop layer after calling this method.
     }
 }

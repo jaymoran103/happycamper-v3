@@ -111,7 +111,7 @@ public class ColumnVisibilityDialog extends InputsDialog {
         // Create column sizing selector with cached option
         RadioButtonSelector<ColumnSizingOption> sizingSelector = RadioButtonSelector.forColumnSizing(
             "Column Sizing",
-            cachedSettings.getSizingOption()
+            ColumnSizingOption.valueOf(cachedSettings.getSizingMode())
         );
 
         // Create custom width input with cached value
@@ -241,7 +241,7 @@ public class ColumnVisibilityDialog extends InputsDialog {
 
         // Save settings to cache
         cachedSettings.setColumnVisibility(columnMap)
-                      .setSizingOption(sizingOption)
+                      .setSizingMode(sizingOption.name())
                       .setCustomWidth(customWidth);
 
         // Apply sizing based on selected option
@@ -264,7 +264,7 @@ public class ColumnVisibilityDialog extends InputsDialog {
             return;
         }
 
-        ColumnSizingOption sizingOption = cachedSettings.getSizingOption();
+        ColumnSizingOption sizingOption = ColumnSizingOption.valueOf(cachedSettings.getSizingMode());
         int customWidth = cachedSettings.getCustomWidth();
 
         if (sizingOption != null) {

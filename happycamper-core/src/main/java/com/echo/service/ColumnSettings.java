@@ -3,8 +3,6 @@ package com.echo.service;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.echo.ui.dialog.ColumnSizingOption;
-
 /**
  * Settings for column visibility and sizing.
  * This class encapsulates all settings related to how columns are displayed in tables.
@@ -12,7 +10,8 @@ import com.echo.ui.dialog.ColumnSizingOption;
 public class ColumnSettings {
 
     private Map<String, Boolean> columnVisibility = new LinkedHashMap<>();
-    private ColumnSizingOption sizingOption = ColumnSizingOption.AUTO_SIZE;
+    /** Name of the sizing mode. Stored as a String to avoid a dependency on the desktop ColumnSizingOption enum. */
+    private String sizingMode = "AUTO_SIZE";
     private int customWidth = 100; // Default custom width in pixels
 
     /**
@@ -47,18 +46,18 @@ public class ColumnSettings {
      *
      * @return The current column sizing option
      */
-    public ColumnSizingOption getSizingOption() {
-        return sizingOption;
+    public String getSizingMode() {
+        return sizingMode;
     }
 
     /**
-     * Sets the column sizing option.
+     * Sets the column sizing mode by name (matches the name of the desktop ColumnSizingOption enum constant).
      *
-     * @param sizingOption The new column sizing option
+     * @param sizingMode The enum constant name, e.g. "AUTO_SIZE", "EQUAL_WIDTH", "CUSTOM_WIDTH"
      * @return This ColumnSettings instance for method chaining
      */
-    public ColumnSettings setSizingOption(ColumnSizingOption sizingOption) {
-        this.sizingOption = sizingOption;
+    public ColumnSettings setSizingMode(String sizingMode) {
+        this.sizingMode = sizingMode;
         return this;
     }
 
