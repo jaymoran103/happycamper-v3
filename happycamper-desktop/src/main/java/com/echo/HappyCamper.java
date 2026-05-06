@@ -3,7 +3,8 @@ package com.echo;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import com.echo.automation.TestPreset;
+import java.io.File;
+
 import com.echo.service.ExportService;
 import com.echo.service.ImportService;
 import com.echo.service.RosterService;
@@ -72,37 +73,12 @@ public class HappyCamper {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        if (args.length==0){
-            setupApp(true);
-        }
-        else if (args.length==1 && args[0].matches("^-?\\d+$")){
-            mainTest(args);
-        }
-        else {
-            System.err.println("Invalid arguments");
-            System.out.println("Expects a single integer indicating test preset");
-        }
+        setupApp(true);
     }
 
-    public static void mainTest(String[] args) {
-        if (args.length==0){
-            main(args);
-            return;
-        }
-        // if (args.length>1){
-        //     if (args[1].equals("-wait")){
-        //         WAIT_TO_AUTOMATE = true;
-        //     }
-        // }
-
-
-        int testMode = Integer.parseInt(args[0]);
-        TestPreset preset = TestPreset.fromId(testMode);
-
-        preset.printReport();
-
+    public static void mainTest(File camperFile, File activityFile, String[] features) {
         MainWindow window = setupApp(true);
-        window.automateImport(preset);
+        window.automateImport(camperFile, activityFile, features);
     }
 
 

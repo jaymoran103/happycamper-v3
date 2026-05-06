@@ -9,8 +9,6 @@ import java.util.Map;
 /**
  * Enum for managing test file paths without hardcoding.
  * Provides methods to create File objects for test resources.
- *
- * TODO ensure path related methods work across different environments, jar, dmg
  */
 public enum TestFiles {
     // Mini roster files
@@ -97,9 +95,16 @@ public enum TestFiles {
         // Standard path in the correct directory
         possiblePaths.add(TEST_RESOURCES_PATH + directory + "/" + filename);
 
+        // Multi-module fallback: desktop tests run from happycamper-desktop/, resources live in core
+        possiblePaths.add("../happycamper-core/" + TEST_RESOURCES_PATH + directory + "/" + filename);
+        possiblePaths.add("happycamper-core/" + TEST_RESOURCES_PATH + directory + "/" + filename);
+        possiblePaths.add("happycamper-v3/happycamper-core/" + TEST_RESOURCES_PATH + directory + "/" + filename);
+
         // Special case for GENERIC_DATA which is in the root testRosters directory
         if (this == GENERIC_DATA) {
             possiblePaths.add(TEST_RESOURCES_PATH + filename);
+            possiblePaths.add("happycamper-core/" + TEST_RESOURCES_PATH + filename);
+            possiblePaths.add("happycamper-v3/happycamper-core/" + TEST_RESOURCES_PATH + filename);
         }
 
         // Check if the file is in miniRosters directory

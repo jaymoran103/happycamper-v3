@@ -13,10 +13,12 @@ public class UserTest {
         try {
             if (args.length > 0) {
                 printPresetInfo(args);
-                HappyCamper.mainTest(args);
+                int testMode = Integer.parseInt(args[0]);
+                TestPreset preset = TestPreset.fromId(testMode);
+                HappyCamper.mainTest(preset.getCamperFile(), preset.getActivityFile(), preset.getFeatures());
             } else {
                 System.out.println("Running with no arguments -> default main");
-                HappyCamper.mainTest(new String[]{});
+                HappyCamper.setupApp(true);
             }
         } catch (Exception e) {
             System.err.println("Error running test: " + e.getMessage());

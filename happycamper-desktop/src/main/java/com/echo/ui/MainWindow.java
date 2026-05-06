@@ -13,8 +13,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import java.io.File;
+
 import com.echo.HappyCamper;
-import com.echo.automation.TestPreset;
 import com.echo.domain.EnhancedRoster;
 import com.echo.filter.FilterManager;
 import com.echo.filter.SortedProgramFilter;
@@ -204,10 +205,10 @@ public class MainWindow extends JFrame {
         }
     }
 
-    public void automateImport(TestPreset preset){
+    public void automateImport(File camperFile, File activityFile, String[] features){
         ImportDialog dialog = new ImportDialog(this, rosterService);
 
-        dialog.automateSelection(preset.getCamperFile(),preset.getActivityFile(),preset.getFeatures());
+        dialog.automateSelection(camperFile, activityFile, features);
         if (dialog.isImportSuccessful()) {
             setRoster(dialog.getImportedRoster());
         }

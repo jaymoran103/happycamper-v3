@@ -14,10 +14,13 @@ public class UserTest_Hardcode {
         try {
             if (args.length > 0) {
                 printPresetInfo(args);
-                HappyCamper.mainTest(args);
+                int testMode = Integer.parseInt(args[0]);
+                TestPreset preset = TestPreset.fromId(testMode);
+                HappyCamper.mainTest(preset.getCamperFile(), preset.getActivityFile(), preset.getFeatures());
             } else {
                 System.out.println("Running with hardcoded argument id -> "+TESTMODE);
-                HappyCamper.mainTest(new String[]{""+TESTMODE});
+                TestPreset preset = TestPreset.fromId(TESTMODE);
+                HappyCamper.mainTest(preset.getCamperFile(), preset.getActivityFile(), preset.getFeatures());
             }
         } catch (Exception e) {
             System.err.println("Error running test: " + e.getMessage());
