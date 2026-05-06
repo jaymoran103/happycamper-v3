@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import com.echo.domain.ActivityRoster;
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.EnhancedRoster;
@@ -30,11 +31,9 @@ import com.echo.validation.RosterRegexBuilder;
  * - Activities not associated any campers present in the camper roster
  */
 public class ActivityFeature implements RosterFeature {
-    /**
-     * Flag to control whether to include orphaned activities (activities without matching campers).
-     * This can be set by the user through the UI to control how orphaned activities are handled.
-     */
-    public static boolean INCLUDE_ORPHANS = true;
+
+    /** Flag to control whether to include orphaned activities (activities without matching campers) */
+    private final boolean includeOrphans;
 
     /** Unique identifier for this feature */
     private static final String FEATURE_ID = "activity";
@@ -93,7 +92,15 @@ public class ActivityFeature implements RosterFeature {
         REQUIRED_FORMATS = Collections.unmodifiableMap(formats);
     }
 
+    /** Creates an ActivityFeature using the supplied configuration. */
+    public ActivityFeature(CampConfig config) {
+        this.includeOrphans = config.isIncludeOrphans();
+    }
 
+    /** Creates an ActivityFeature with factory-default configuration. */
+    public ActivityFeature() {
+        this(CampConfig.defaults());
+    }
 
     @Override
     public String getFeatureId() {
@@ -258,8 +265,13 @@ public class ActivityFeature implements RosterFeature {
                 }
             }
             catch (Exception e) {
-                // Log the error and continue with the next row
-                System.err.println("Error processing activity row: " + e.getMessage());
+                // Log the error as data format warning and continue to the next row
+                RosterWarning warning = RosterWarning.create_badDataFormat(
+                    row,
+                    RosterHeader.ACTIVITY.activityRosterName,
+                    "Processing error: " + e.getMessage()
+                );
+                warningManager.logWarning(warning);
             }
         }
         return mergedActivities;
@@ -317,10 +329,10 @@ public class ActivityFeature implements RosterFeature {
                 // RosterWarning warning = RosterWarning.build_unmatchedActivity(activityDataRow);
                 // warningManager.logWarning(warning);
 
-                // If INCLUDE_ORPHANS is true, add the orphaned activity as a new camper
+                // If includeOrphans is true, add the orphaned activity as a new camper
                 // FUTURE - Give user option to include unmatched activities or not
                 // FUTURE - Add a misc "notes" column system for this sort of behavior? seems helpful for exporting and checking later, but adds uneccessary complexity for now
-                if (INCLUDE_ORPHANS) {
+                if (includeOrphans) {
                     // Create a new camper with the orphaned activity data
                     Camper orphanedCamper = new Camper(activityDataRow);
 

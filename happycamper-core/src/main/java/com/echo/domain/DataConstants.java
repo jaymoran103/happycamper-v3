@@ -15,10 +15,6 @@ public class DataConstants {
     /** Default value for the number of rounds when none are assigned */
     public static final String NO_ROUNDS = "0";
 
-    /** Flag to control whether to use the display placeholder in tables */
-    public static boolean USE_DISPLAY_PLACEHOLDER = true;
-
-
     /**
      * Checks if a string value should be considered empty.
      * A value is considered empty if it is null, an empty string after trimming,
@@ -55,18 +51,31 @@ public class DataConstants {
 
     /**
      * Returns the appropriate display value for a given string.
-     * If the string is empty, returns either DISPLAY_NO_DATA or DISPLAY_EMPTY
-     * based on the USE_DISPLAY_PLACEHOLDER setting. Otherwise, returns the string itself.
+     * If the string is empty, returns {@code DISPLAY_NO_DATA} or {@code DISPLAY_EMPTY}
+     * based on {@code usePlaceholder}. Otherwise returns the string itself.
      *
-     * @param value The string value to check
-     * @return The display value for the string suitable for UI presentation
+     * @param value          The string value to check
+     * @param usePlaceholder When {@code true}, empty values are rendered as
+     *                       {@link #DISPLAY_NO_DATA}; when {@code false} as
+     *                       {@link #DISPLAY_EMPTY}.
+     * @return The display value suitable for UI presentation
      */
-    public static String getDisplayValue(String value) {
+    public static String getDisplayValue(String value, boolean usePlaceholder) {
         if (isEmpty(value)) {
-            // Previously used: return value == null ? DISPLAY_EMPTY : DISPLAY_NO_DATA;
-            return USE_DISPLAY_PLACEHOLDER ? DISPLAY_NO_DATA : DISPLAY_EMPTY;
+            return usePlaceholder ? DISPLAY_NO_DATA : DISPLAY_EMPTY;
         }
         return value;
+    }
+
+    /**
+     * Returns the appropriate display value for a given string, using
+     * {@link #DISPLAY_NO_DATA} as the placeholder for empty values.
+     *
+     * @param value The string value to check
+     * @return The display value suitable for UI presentation
+     */
+    public static String getDisplayValue(String value) {
+        return getDisplayValue(value, true);
     }
 
     /**
@@ -101,18 +110,6 @@ public class DataConstants {
         } else {
             return DISPLAY_NO_DATA;
         }
-    }
-
-
-    /**
-     * Updates the setting that controls whether the display placeholder is used.
-     * When true, empty values are displayed as "No Data" in the UI.
-     * When false, empty values are displayed as an empty string.
-     *
-     * @param value The new value for the USE_DISPLAY_PLACEHOLDER setting
-     */
-    public static void updateUseDisplayPlaceholder(boolean value) {
-        USE_DISPLAY_PLACEHOLDER = value;
     }
 
 

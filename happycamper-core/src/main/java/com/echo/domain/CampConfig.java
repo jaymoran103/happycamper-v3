@@ -26,6 +26,9 @@ public final class CampConfig {
     // ----- PreferenceFeature config -----
     private final List<String> exemptActivities;
 
+    // ----- MedicalFeature config -----
+    private final boolean warnOnMissingMedical;
+
     // ----- SwimLevelFeature config -----
     // NOTE: Not currently implemented, but will be added when full config implementation and persistence are worked out.
     // Current swim level config maps integers to level names used in source data. 
@@ -34,6 +37,7 @@ public final class CampConfig {
 
     private CampConfig(Builder builder) {
         this.includeOrphans        = builder.includeOrphans;
+        this.warnOnMissingMedical  = builder.warnOnMissingMedical;
         this.exemptActivities      = Collections.unmodifiableList(new ArrayList<>(builder.exemptActivities));
         this.programDefinitions    = Collections.unmodifiableList(new ArrayList<>(builder.programDefinitions));
     }
@@ -69,9 +73,20 @@ public final class CampConfig {
     }
 
 
+    /** Whether a warning should be logged when a camper has no medical notes. */
+    public boolean isWarnOnMissingMedical() {
+        return warnOnMissingMedical;
+    }
     
     /**
      * Builder for constructing custom {@link CampConfig} instances.
+     *
+     * <pre>{@code
+     * CampConfig config = new CampConfig.Builder()
+     *     .includeOrphans(false)
+     *     .warnOnMissingMedical(true)
+     *     .build();
+     * }</pre>
      */
     public static final class Builder {
         private boolean includeOrphans       = true;
@@ -91,6 +106,11 @@ public final class CampConfig {
 
         public Builder programDefinitions(List<ProgramDefinition> val) {
             this.programDefinitions = new ArrayList<>(val);
+            return this;
+        }
+        
+        public Builder warnOnMissingMedical(boolean val) {
+            this.warnOnMissingMedical = val;
             return this;
         }
 

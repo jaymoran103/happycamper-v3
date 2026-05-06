@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.EnhancedRoster;
@@ -79,47 +80,19 @@ public class PreferenceFeature implements RosterFeature {
     public static final String PENULTIMATE_TOKEN = " and "; //campminder-generated preference sets use " and " to separate the last two items
     private final int ROUNDS_OFFERED = ActivityFeature.MAX_ROUNDS; // Maximum number of activity rounds supported
 
-    // List of activities that are exempt from preference scoring
-    // FUTURE - add config file for preference exemptions?
-    private static List<String> DEFAULT_EXEMPT_ACTIVITIES = List.of("Swimming", "Horseback Riding");
-    private static List<String> EXEMPT_ACTIVITIES;
+    /** Activities exempt from preference scoring (e.g. assigned outside the preference system). */
+    private final List<String> exemptActivities;
+
     private Map<String, Double> camperScores;
 
+    /** Creates a PreferenceFeature using the supplied configuration. */
+    public PreferenceFeature(CampConfig config) {
+        this.exemptActivities = config.getExemptActivities();
+    }
+
+    /** Creates a PreferenceFeature with factory-default configuration. */
     public PreferenceFeature() {
-        resetExemptActivities();
-    }
-
-    /**
-     * Adds an activity to the exempt list
-     * @param activity The activity name to exempt from preference scoring
-     */
-    public static void addExemptActivity(String activity) {
-        EXEMPT_ACTIVITIES.add(activity);
-    }
-
-    /**
-     * Sets the list of exempt activities
-     * @param activities List of activity names to exempt from preference scoring
-     */
-    public static void setExemptActivities(List<String> activities) {
-        EXEMPT_ACTIVITIES.clear();
-        EXEMPT_ACTIVITIES.addAll(activities);
-    }
-
-    /**
-     * Gets the list of exempt activities
-     * @return The list of exempt activities
-     * @return
-     */
-    public static List<String> getExemptActivities() {
-        return EXEMPT_ACTIVITIES;
-    }
-
-    /**
-     * Resets the exempt activities to the default list;
-     */
-    public static void resetExemptActivities() {
-        EXEMPT_ACTIVITIES = new ArrayList<>(DEFAULT_EXEMPT_ACTIVITIES);
+        this(CampConfig.defaults());
     }
 
     @Override
@@ -237,13 +210,13 @@ public class PreferenceFeature implements RosterFeature {
         }
 
         // Determine camper's unrequested activities
-        List<String> unrequestedActivities = PreferenceFeatureUtils.determineUnrequestedActivities(camper,preferences,assignments);
+        List<String> unrequestedActivities = PreferenceFeatureUtils.determineUnrequestedActivities(camper, preferences, assignments, exemptActivities);
 
         // Determine points for each round
-        int[] roundPoints = PreferenceFeatureUtils.determineRoundPoints(preferences,assignments);
+        int[] roundPoints = PreferenceFeatureUtils.determineRoundPoints(preferences, assignments, exemptActivities);
 
         // Determine preference score
-        double preferenceScore = PreferenceFeatureUtils.determinePreferenceScore(camper,roundPoints,assignments);
+        double preferenceScore = PreferenceFeatureUtils.determinePreferenceScore(camper, roundPoints, assignments, exemptActivities);
 
         // Add results to the roster
         setValue_unrequestedActivities(camper,unrequestedActivities);

@@ -9,7 +9,7 @@ import com.echo.domain.RosterHeader;
 
 public class PreferenceFeatureUtils {
 
-    public static double determinePreferenceScore(Camper camper,int[] roundPoints,String[] assignments) {
+    public static double determinePreferenceScore(Camper camper, int[] roundPoints, String[] assignments, List<String> exemptActivities) {
         // Sum points for each round - used Arrays.stream(roundPoints, 0, roundCount).sum(); but that seemed less efficient for a 3 index array
         int totalPoints = 0;
         for (int i = 0; i < roundPoints.length; i++) {
@@ -17,7 +17,7 @@ public class PreferenceFeatureUtils {
         }
 
         // Calculate preference score as totalPoints' percentage of maxPoints
-        int maxPoints = determineMaxPoints(camper,assignments);
+        int maxPoints = determineMaxPoints(camper, assignments, exemptActivities);
         double preferenceScore = maxPoints > 0 ? (double)totalPoints / maxPoints
                                                : 1.0;
 
@@ -32,14 +32,15 @@ public class PreferenceFeatureUtils {
      * @param camper Camper to check data for
      * @param preferences List of camper preferences, in order
      * @param assignments Array of assignments for each round
+     * @param exemptActivities Activities that are exempt from preference scoring
      * @return List of activities that were not requested
      */
-    public static List<String> determineUnrequestedActivities(Camper camper,List<String> preferences,String[] assignments){
+    public static List<String> determineUnrequestedActivities(Camper camper, List<String> preferences, String[] assignments, List<String> exemptActivities){
         List<String> unrequestedActivities = new ArrayList<>();
         for (String assignment : assignments) {
             if ( DataConstants.isEmpty(assignment)
                     || preferences.contains(assignment)
-                    || PreferenceFeature.getExemptActivities().contains(assignment) ){
+                    || exemptActivities.contains(assignment) ){
                 continue;
             }
             unrequestedActivities.add(assignment);
@@ -47,21 +48,21 @@ public class PreferenceFeatureUtils {
         return unrequestedActivities;
     }
 
-    public static int[] determineRoundPoints(List<String> preferences,String[] assignments){
+    public static int[] determineRoundPoints(List<String> preferences, String[] assignments, List<String> exemptActivities) {
         int[] roundPoints = new int[assignments.length];
         for (int i = 0; i < assignments.length; i++) {
-            roundPoints[i] = isExemptActivity(assignments[i]) ? 0 : scoreActivity(preferences, assignments[i]);
+            roundPoints[i] = isExemptActivity(assignments[i], exemptActivities) ? 0 : scoreActivity(preferences, assignments[i]);
         }
         return roundPoints;
     }
 
-    public static int determineMaxPoints(Camper camper,String[] assignments){
+    public static int determineMaxPoints(Camper camper, String[] assignments, List<String> exemptActivities) {
         int roundCount = Integer.parseInt(camper.getValue(RosterHeader.ROUND_COUNT.standardName));
 
         //Determine # of elligible (non-exempt) activities
         int nonExemptCount = 0;
         for (int i = 0; i < roundCount; i++) {
-            if (!isExemptActivity(assignments[i])) {
+            if (!isExemptActivity(assignments[i], exemptActivities)) {
                 nonExemptCount++;
             }
         }
@@ -159,12 +160,14 @@ public class PreferenceFeatureUtils {
     }
 
     /**
-     * Checks if an activity is in the exempt list
-     * @param activity The activity to check
-     * @return true if the activity is exempt, false otherwise
+     * Checks if an activity is in the exempt list.
+     *
+     * @param activity         The activity to check
+     * @param exemptActivities The list of activities exempt from preference scoring
+     * @return true if the activity is exempt or empty, false otherwise
      */
-    static boolean isExemptActivity(String activity) {
-        return PreferenceFeature.getExemptActivities().contains(activity) || DataConstants.isEmpty(activity);
+    static boolean isExemptActivity(String activity, List<String> exemptActivities) {
+        return exemptActivities.contains(activity) || DataConstants.isEmpty(activity);
     }
-    
+
 }
