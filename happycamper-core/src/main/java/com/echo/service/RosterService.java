@@ -36,10 +36,6 @@ public class RosterService {
     private final List<RosterFeature> availableFeatures;
     private WarningManager warningManager; // Created new for each processing operation
 
-
-    //TODO manage exportSettings similarly?
-    private ViewSettings viewSettings;
-
     /**
      * Creates a new RosterService with the given import and export services.
      * Initializes the list of available features that can be applied to rosters.
@@ -50,8 +46,6 @@ public class RosterService {
     public RosterService(ImportService importService, ExportService exportService) {
         this.importService = importService;
         this.exportService = exportService;
-
-        this.viewSettings = new ViewSettings();
 
         // Register available features using factory defaults.
         // Each feature is constructed with a CampConfig, ensuring well-defined configuration
@@ -242,14 +236,6 @@ public class RosterService {
         }
         return warningManager;
     }
-
-    /**
-     * Gets the current view settings.
-     */
-    public ViewSettings getViewSettings() {
-        return viewSettings;
-    }
-
 
     /**
      * Exports a roster using the specified export settings.

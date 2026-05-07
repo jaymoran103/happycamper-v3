@@ -20,6 +20,7 @@ import com.echo.domain.EnhancedRoster;
 import com.echo.filter.FilterManager;
 import com.echo.filter.SortedProgramFilter;
 import com.echo.service.RosterService;
+import com.echo.service.ViewSettings;
 import com.echo.ui.component.RosterTable;
 import com.echo.ui.dialog.ColumnVisibilityDialog;
 import com.echo.ui.dialog.ExportDialog;
@@ -36,6 +37,7 @@ import com.echo.ui.help.PageContentBuilder.HelpPage;
  */
 public class MainWindow extends JFrame {
     private final RosterService rosterService;
+    private final ViewSettings viewSettings = new ViewSettings();
 
     private EnhancedRoster currentRoster;
     private FilterManager filterManager;
@@ -152,7 +154,7 @@ public class MainWindow extends JFrame {
         roster.resetHeaderVisibility();
 
         // Set roster in table (sync placeholder setting first so the initial render is correct)
-        rosterTable.setUsePlaceholder(rosterService.getViewSettings().isUseDisplayPlaceholder());
+        rosterTable.setUsePlaceholder(viewSettings.isUseDisplayPlaceholder());
         rosterTable.setRoster(roster, filterManager);
 
         // Create and add filter sidebar
@@ -253,7 +255,7 @@ public class MainWindow extends JFrame {
         }
 
         // Show the view settings dialog
-        ViewSettingsDialog viewSettingsDialog = new ViewSettingsDialog(this, rosterService.getViewSettings());
+        ViewSettingsDialog viewSettingsDialog = new ViewSettingsDialog(this, viewSettings);
         viewSettingsDialog.showDialog();
 
         // If settings were confirmed, propagate the new placeholder setting and repaint
