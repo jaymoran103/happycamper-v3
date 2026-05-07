@@ -15,6 +15,12 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- SLF4J runtime implementation for desktop -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
         <!-- Core module -->
         <dependency>
             <groupId>com.echo</groupId>

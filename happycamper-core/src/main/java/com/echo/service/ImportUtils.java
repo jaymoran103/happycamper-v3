@@ -16,6 +16,8 @@ import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.echo.logging.RosterException;
 
@@ -23,6 +25,8 @@ import com.echo.logging.RosterException;
  * Utility class intended to simplify file and importing process while sorting out file processing bugs
  */
 public class ImportUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(ImportUtils.class);
 
 
     /**
@@ -99,6 +103,10 @@ public class ImportUtils {
  * Utility class used to clean problematic characters from CSV files, including junk leading/trailing characters and uneven quotes.
  */
 class ContentCleaner {
+    
+    // Logger for debugging and warnings about content issues
+    private static final Logger log = LoggerFactory.getLogger(ContentCleaner.class);
+
     /** Uses given reader to iterate through a file and clean its content. Used by setupFromCSV()
      * @param reader BufferedReader for a CSV file
      * @return StringBuilder containing cleaned content
@@ -142,7 +150,7 @@ class ContentCleaner {
 
         // Check for valid quote count
         if (!hasValidQuoteCount(line)) {
-            System.out.println("Filtered a line with uneven quote count: " + line);
+            log.warn("Filtered a line with uneven quote count: {}", line);
             return null;
         }
 
@@ -156,7 +164,7 @@ class ContentCleaner {
      */
     private static String cleanLineStart(String line) {
         while (!line.startsWith("\"") && !line.isEmpty()) {
-            System.out.println("Caught a junk character at start: '" + line.charAt(0) + "'");
+            log.debug("Caught a junk character at start: '{}'", line.charAt(0));
             line = line.substring(1);
         }
         return line;
@@ -169,7 +177,7 @@ class ContentCleaner {
      */
     private static String cleanLineEnd(String line) {
         while (!line.endsWith("\"") && !line.isEmpty()) {
-            System.out.println("Caught a junk character at end: '" + line.charAt(line.length()-1) + "'");
+            log.debug("Caught a junk character at end: '{}'", line.charAt(line.length()-1));
             line = line.substring(0, line.length()-1);
         }
         return line;

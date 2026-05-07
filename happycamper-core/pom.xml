@@ -15,6 +15,12 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
         <!-- CSV + IO -->
         <dependency>
             <groupId>org.apache.commons</groupId>
