@@ -65,9 +65,6 @@ public class ViewSettingsTest {
         settings.setUseRowContrast(true);
         settings.setHighlightEmptyData(true);
 
-        // Apply core settings (DataConstants only — TableColors is now desktop responsibility)
-        settings.apply();
-
         // Desktop layer applies ViewSettings values to TableColors
         TableColors.setAlternateShades(settings.isUseRowContrast());
         TableColors.setHighlightEmptyData(settings.isHighlightEmptyData());
@@ -80,8 +77,6 @@ public class ViewSettingsTest {
         settings.setUseRowContrast(false);
         settings.setHighlightEmptyData(false);
 
-        // Apply settings again (core + desktop layer)
-        settings.apply();
         TableColors.setAlternateShades(settings.isUseRowContrast());
         TableColors.setHighlightEmptyData(settings.isHighlightEmptyData());
 

@@ -47,14 +47,18 @@ public class TableLook {
      * - Alternating row colors
      * - Selection highlighting
      * - Empty field highlighting
+     *
+     * @param table           The table to configure
+     * @param usePlaceholder  When {@code true}, empty cells render as "No Data";
+     *                        when {@code false} they render as the empty-display string.
      */
-    public static void doCellLook(JTable table) {
+    public static void doCellLook(JTable table, boolean usePlaceholder) {
         table.setGridColor(TableColors.getGridColor());
 
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 // Convert the value for display
-                String displayValue = DataConstants.getDisplayValue((String)value);
+                String displayValue = DataConstants.getDisplayValue((String)value, usePlaceholder);
                 Component cell = super.getTableCellRendererComponent(table, displayValue,
                         isSelected, hasFocus, row, column);
 

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.echo.domain.ActivityRoster;
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.CamperRoster;
 import com.echo.domain.EnhancedRoster;
@@ -52,15 +53,15 @@ public class RosterService {
 
         this.viewSettings = new ViewSettings();
 
-        // Register available features
+        // Register available features using factory defaults.
+        // Each feature is constructed with a CampConfig, ensuring well-defined configuration
+        CampConfig config = CampConfig.defaults();
         availableFeatures = new ArrayList<>();
-        availableFeatures.add(new ActivityFeature());
-
+        availableFeatures.add(new ActivityFeature(config));
         availableFeatures.add(new ProgramFeature());
-
-        availableFeatures.add(new PreferenceFeature());
+        availableFeatures.add(new PreferenceFeature(config));
         availableFeatures.add(new SwimLevelFeature());
-        availableFeatures.add(new MedicalFeature());
+        availableFeatures.add(new MedicalFeature(config));
         // Add additional features here
     }
 

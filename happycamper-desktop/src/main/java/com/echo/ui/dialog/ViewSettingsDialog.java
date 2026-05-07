@@ -85,7 +85,6 @@ public class ViewSettingsDialog extends InputsDialog {
                       .setHighlightEmptyData(highlightEmptySelector.getValue());
 
         // Apply settings immediately
-        cachedSettings.apply();
         TableColors.setAlternateShades(cachedSettings.isUseRowContrast());
         TableColors.setHighlightEmptyData(cachedSettings.isHighlightEmptyData());
     }
