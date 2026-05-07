@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -129,14 +130,16 @@ public class PreferenceFeatureTest {
     @Test
     @DisplayName("Test exempt activity management")
     void testExemptActivityManagement() {
-        // Default exempt activities
-        assertTrue(PreferenceFeatureUtils.isExemptActivity("Swimming"));
-        assertTrue(PreferenceFeatureUtils.isExemptActivity("Horseback Riding"));
-        assertFalse(PreferenceFeatureUtils.isExemptActivity("Archery"));
+        // Default exempt activities (from CampConfig.defaults())
+        List<String> defaultExempt = CampConfig.defaults().getExemptActivities();
+        assertTrue(PreferenceFeatureUtils.isExemptActivity("Swimming", defaultExempt));
+        assertTrue(PreferenceFeatureUtils.isExemptActivity("Horseback Riding", defaultExempt));
+        assertFalse(PreferenceFeatureUtils.isExemptActivity("Archery", defaultExempt));
 
-        // Add new exempt activity
-        PreferenceFeature.addExemptActivity("Archery");
-        assertTrue(PreferenceFeatureUtils.isExemptActivity("Archery"));
+        // A feature configured with an additional exempt activity should treat it as exempt
+        List<String> customExempt = new ArrayList<>(defaultExempt);
+        customExempt.add("Archery");
+        assertTrue(PreferenceFeatureUtils.isExemptActivity("Archery", customExempt));
     }
 
     @ParameterizedTest
@@ -151,10 +154,8 @@ public class PreferenceFeatureTest {
     })
     @DisplayName("Test various preference scenarios")
     public void testPreferenceScenarios(String preferences, String roundCount, String r1, String r2, String r3, int expectedScore) {
-        // Add Swimming to exempt activities to match test expectations
-        if (!PreferenceFeatureUtils.isExemptActivity("Swimming")) {
-            PreferenceFeature.addExemptActivity("Swimming");
-        }
+        // Swimming is already in the default exempt list — no config override needed.
+        // The feature under test (field `feature`) was created with CampConfig.defaults().
 
         Camper camper = createTestCamper(preferences, roundCount, r1, r2, r3);
 

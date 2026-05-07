@@ -26,6 +26,10 @@ public class RosterTable extends JPanel {
     private EnhancedRoster roster;
     private FilterManager filterManager;
 
+    /** Mirrors ViewSettings.isUseDisplayPlaceholder(). 
+     * Updated by MainWindow when settings change. */
+    private boolean usePlaceholder = false; // ViewSettings default is false
+
     private final JTable table;
     private final RosterTableModel tableModel;
     private final CustomTableRowSorter<RosterTableModel> rowSorter;
@@ -43,8 +47,18 @@ public class RosterTable extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
+    }
 
-
+    /**
+     * Updates the display-placeholder setting and re-renders all cells.
+     * Should be called by MainWindow whenever ViewSettings change.
+     *
+     * @param usePlaceholder When {@code true}, empty cells display "No Data";
+     *                       when {@code false} they display the empty-string placeholder.
+     */
+    public void setUsePlaceholder(boolean usePlaceholder) {
+        this.usePlaceholder = usePlaceholder;
+        tableModel.fireTableStructureChanged();
     }
 
     /**
@@ -322,7 +336,7 @@ public class RosterTable extends JPanel {
 
         private void updateLook(){
             TableLook.doHeaderLook(table);
-            TableLook.doCellLook(table);
+            TableLook.doCellLook(table, RosterTable.this.usePlaceholder);
         }
 
         @Override

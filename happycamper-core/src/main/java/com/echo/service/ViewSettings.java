@@ -1,7 +1,5 @@
 package com.echo.service;
 
-import com.echo.domain.DataConstants;
-
 /**
  * Settings for the table view display.
  * This class encapsulates all settings related to how data is displayed in tables.
@@ -25,17 +23,11 @@ public class ViewSettings {
         public boolean getDefaultValue() {
             return defaultValue;
         }
-
     }
 
     private boolean useDisplayPlaceholder = ViewOption.USE_DISPLAY_PLACEHOLDER.getDefaultValue();
     private boolean useRowContrast = ViewOption.USE_ROW_CONTRAST.getDefaultValue();
     private boolean highlightEmptyData = ViewOption.HIGHLIGHT_EMPTY_DATA.getDefaultValue();
-
-    // Constructor with default values
-    public ViewSettings() {
-        apply();
-    }
 
     // Getters and setters with fluent interface
     public boolean isUseDisplayPlaceholder() {
@@ -63,14 +55,5 @@ public class ViewSettings {
     public ViewSettings setHighlightEmptyData(boolean highlightEmptyData) {
         this.highlightEmptyData = highlightEmptyData;
         return this;
-    }
-
-    /**
-     * Applies these view settings to the relevant components.
-     */
-    public void apply() {
-        // Update DataConstants placeholder setting
-        DataConstants.updateUseDisplayPlaceholder(useDisplayPlaceholder);
-        //  NOTE: TableColors calls (setAlternateShades, setHighlightEmptyData) are applied by the desktop layer after calling this method.
     }
 }

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.EnhancedRoster;
@@ -35,8 +36,18 @@ public class MedicalFeature implements RosterFeature {
     /** Required formats for fields (none in this case) */
     private static final Map<String, String> REQUIRED_FORMATS = new HashMap<>();
 
-    /** Enables/disables warnings for missing medical notes, relevant here because its common for campers to have no such entry */
-    private static boolean WARN_ON_MISSING_DATA = false;
+    /** Whether to log a warning when a camper has no medical notes. */
+    private final boolean warnOnMissingMedical;
+
+    /** Creates a MedicalFeature using the supplied configuration. */
+    public MedicalFeature(CampConfig config) {
+        this.warnOnMissingMedical = config.isWarnOnMissingMedical();
+    }
+
+    /** Creates a MedicalFeature with factory-default configuration. */
+    public MedicalFeature() {
+        this(CampConfig.defaults());
+    }
 
     @Override
     public String getFeatureId() {
@@ -73,7 +84,7 @@ public class MedicalFeature implements RosterFeature {
             
             if (DataConstants.isEmpty(medicalNotes)) {
                 camper.setValue(RosterHeader.MEDICAL_NOTES.standardName, DataConstants.DISPLAY_EMPTY);
-                if (WARN_ON_MISSING_DATA){
+                if (warnOnMissingMedical) {
                         RosterWarning warning = RosterWarning.create_camperMissingField(
                         camper.getData(),
                         RosterHeader.MEDICAL_NOTES.standardName,
@@ -109,7 +120,4 @@ public class MedicalFeature implements RosterFeature {
         return true;
     }
 
-    public static void setWarnOnMissingData(boolean warn) {
-        WARN_ON_MISSING_DATA = warn;
-    }
 }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -105,10 +106,12 @@ public class MedicalFeatureTest {
     @Test
     @DisplayName("Test applyFeature method")
     public void testApplyFeature() {
-        MedicalFeature.setWarnOnMissingData(true);
+        // Use a feature configured to warn on missing data
+        MedicalFeature warnEnabledFeature = new MedicalFeature(
+            new CampConfig.Builder().warnOnMissingMedical(true).build());
 
         // Apply the feature
-        feature.applyFeature(roster, warningManager);
+        warnEnabledFeature.applyFeature(roster, warningManager);
 
         // Verify the feature is enabled
         assertTrue(roster.hasFeature("medical"));

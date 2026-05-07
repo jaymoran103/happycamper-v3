@@ -151,7 +151,8 @@ public class MainWindow extends JFrame {
         // Then reset to default values
         roster.resetHeaderVisibility();
 
-        // Set roster in table
+        // Set roster in table (sync placeholder setting first so the initial render is correct)
+        rosterTable.setUsePlaceholder(rosterService.getViewSettings().isUseDisplayPlaceholder());
         rosterTable.setRoster(roster, filterManager);
 
         // Create and add filter sidebar
@@ -255,8 +256,9 @@ public class MainWindow extends JFrame {
         ViewSettingsDialog viewSettingsDialog = new ViewSettingsDialog(this, rosterService.getViewSettings());
         viewSettingsDialog.showDialog();
 
-        // If settings were confirmed, refresh the table to apply the new settings
+        // If settings were confirmed, propagate the new placeholder setting and repaint
         if (viewSettingsDialog.isSettingsConfirmed() && currentRoster != null) {
+            rosterTable.setUsePlaceholder(viewSettingsDialog.getSettings().isUseDisplayPlaceholder());
             rosterTable.repaint();
         }
     }

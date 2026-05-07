@@ -1,12 +1,12 @@
 package com.echo.feature;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,11 +16,6 @@ import com.echo.domain.Camper;
 import com.echo.domain.RosterHeader;
 
 class PreferenceFeatureUtilsTest {
-
-    @BeforeEach
-    void resetExemptActivities() {
-        new PreferenceFeature();
-    }
 
     @Test
     @DisplayName("Test preference field parsing")
@@ -37,13 +32,11 @@ class PreferenceFeatureUtilsTest {
         List<String> preferences = Arrays.asList("Arts & Crafts", "Sports", "Fishing");
         String[] assignments = {"Arts & Crafts", "Water Polo", "Sports"};
 
-        int[] expected = {10, 0, 9};
-        int[] roundPoints = PreferenceFeatureUtils.determineRoundPoints(preferences, assignments);
+        int[] roundPoints = PreferenceFeatureUtils.determineRoundPoints(preferences, assignments, Collections.emptyList());
 
         assertEquals(10, roundPoints[0]);
         assertEquals(0, roundPoints[1]);
         assertEquals(9, roundPoints[2]);
-        // assertArrayEquals(expected,roundPoints);
     }
 
     @Test
@@ -54,7 +47,7 @@ class PreferenceFeatureUtilsTest {
 
         List<String> expected = Arrays.asList("Water Polo", "Biking");
         Camper testCamper = createTestCamper("Archery, Sports", "3", "Archery", "Water Polo", "Biking");
-        assertEquals(expected, PreferenceFeatureUtils.determineUnrequestedActivities(testCamper, preferences, assignments));
+        assertEquals(expected, PreferenceFeatureUtils.determineUnrequestedActivities(testCamper, preferences, assignments, Collections.emptyList()));
     }
 
     @ParameterizedTest
