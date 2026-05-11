@@ -5,6 +5,11 @@ import javax.swing.UIManager;
 
 import java.io.File;
 
+import com.echo.domain.CampConfig;
+import com.echo.feature.FeatureRegistration;
+import com.echo.feature.FeatureRegistry;
+import com.echo.feature.ProgramFeature;
+import com.echo.filter.SortedProgramFilter;
 import com.echo.service.ExportService;
 import com.echo.service.ImportService;
 import com.echo.service.RosterService;
@@ -35,7 +40,7 @@ public class HappyCamper {
         // Create services
         ImportService importService = new ImportService();
         ExportService exportService = new ExportService();
-        RosterService rosterService = new RosterService(importService, exportService);
+        RosterService rosterService = new RosterService(importService, exportService, buildDesktopFeatureRegistry());
 
         // Create UI immediately instead of using invokeLater
         createSingleWindow(rosterService);
@@ -81,5 +86,15 @@ public class HappyCamper {
         window.automateImport(camperFile, activityFile, features);
     }
 
+    /**
+     * Builds a {@link FeatureRegistry} configured for the desktop module. 
+     * The core defaults have no filter for {@code ProgramFeature} because {@code SortedProgramFilter} depends
+     * on Swing; the desktop registry swaps in that pairing here.
+     */
+    public static FeatureRegistry buildDesktopFeatureRegistry() {
+        FeatureRegistry registry = FeatureRegistry.defaults(CampConfig.defaults());
+        registry.replace("program", new FeatureRegistration(new ProgramFeature(), SortedProgramFilter::new, false));
+        return registry;
+    }
 
 }

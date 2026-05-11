@@ -1,7 +1,6 @@
 package com.echo.service;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.echo.domain.ActivityRoster;
@@ -11,11 +10,8 @@ import com.echo.domain.CamperRoster;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
 import com.echo.feature.ActivityFeature;
-import com.echo.feature.MedicalFeature;
-import com.echo.feature.PreferenceFeature;
-import com.echo.feature.ProgramFeature;
+import com.echo.feature.FeatureRegistry;
 import com.echo.feature.RosterFeature;
-import com.echo.feature.SwimLevelFeature;
 import com.echo.filter.FilterManager;
 import com.echo.logging.RosterException;
 import com.echo.logging.WarningManager;
@@ -33,30 +29,32 @@ import com.echo.logging.WarningManager;
 public class RosterService {
     private final ImportService importService;
     private final ExportService exportService;
-    private final List<RosterFeature> availableFeatures;
+    private final FeatureRegistry featureRegistry;
     private WarningManager warningManager; // Created new for each processing operation
 
     /**
-     * Creates a new RosterService with the given import and export services.
-     * Initializes the list of available features that can be applied to rosters.
-     *
-     * @param importService The service for importing data from files
-     * @param exportService The service for exporting data to files
+     * Creates a new RosterService backed by the default core feature registry.
      */
     public RosterService(ImportService importService, ExportService exportService) {
+        this(importService, exportService, FeatureRegistry.defaults(CampConfig.defaults()));
+    }
+
+    /**
+     * Creates a new RosterService with an explicit feature registry. Desktop callers
+     * pass a registry pre-populated with Swing-coupled filters; web callers use core
+     * defaults.
+     */
+    public RosterService(ImportService importService, ExportService exportService, FeatureRegistry featureRegistry) {
         this.importService = importService;
         this.exportService = exportService;
+        this.featureRegistry = featureRegistry;
+    }
 
-        // Register available features using factory defaults.
-        // Each feature is constructed with a CampConfig, ensuring well-defined configuration
-        CampConfig config = CampConfig.defaults();
-        availableFeatures = new ArrayList<>();
-        availableFeatures.add(new ActivityFeature(config));
-        availableFeatures.add(new ProgramFeature());
-        availableFeatures.add(new PreferenceFeature(config));
-        availableFeatures.add(new SwimLevelFeature());
-        availableFeatures.add(new MedicalFeature(config));
-        // Add additional features here
+    /**
+     * @return the registry of features and filter pairings used by this service
+     */
+    public FeatureRegistry getFeatureRegistry() {
+        return featureRegistry;
     }
 
     /**
@@ -172,13 +170,7 @@ public class RosterService {
      * @return The matching RosterFeature instance, or null if not found
      */
     private RosterFeature findFeature(String featureId) {
-        
-        for (RosterFeature feature : availableFeatures) {
-            if (feature.getFeatureId().equals(featureId)) {
-                return feature;
-            }
-        }
-        return null;
+        return featureRegistry.find(featureId).map(r -> r.feature()).orElse(null);
     }
 
     /**
@@ -188,7 +180,7 @@ public class RosterService {
      * @return A new list containing all available RosterFeature instances
      */
     public List<RosterFeature> getAvailableFeatures() {
-        return new ArrayList<>(availableFeatures);
+        return featureRegistry.getFeatures();
     }
 
     /**

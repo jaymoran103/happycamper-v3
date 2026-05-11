@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.echo.HappyCamper;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -45,7 +46,7 @@ public class FilterSidebarTest {
         roster.enableFeature("program");
 
         // Create filters
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Create the sidebar
         sidebar = new FilterSidebar(roster, filterManager);

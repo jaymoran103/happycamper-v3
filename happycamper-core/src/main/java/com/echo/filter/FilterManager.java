@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
+import com.echo.feature.FeatureRegistration;
+import com.echo.feature.FeatureRegistry;
 
 /**
  * Manager for roster filters.
@@ -113,29 +115,25 @@ public class FilterManager {
     }
 
     /**
-     * Creates filters for enabled features in the roster.
+     * Creates filters for enabled features in the roster, driven by the {@link FeatureRegistry}.
+     * Each registration with a non-null filter factory contributes a filter when its feature
+     * is either always-enabled or present on the roster.
      *
-     * @param roster The roster to create filters for
+     * @param roster   the roster to create filters for
+     * @param registry the registry describing feature/filter pairings
      */
-    public void createFiltersForRoster(EnhancedRoster roster) {
+    public void createFiltersForRoster(EnhancedRoster roster, FeatureRegistry registry) {
         setRoster(roster);
         filters.clear();
 
-        // Always add the assignment filter to show basic round counts
-        addFilter(new AssignmentFilter());
-
-        // NOTE: SortedProgramFilter is Swing-coupled and lives in happycamper-desktop.
-        // Desktop callers must add it manually after this method (see MainWindow.setRoster).
-        if (roster.hasFeature("preference")) {
-            addFilter(new PreferenceFilter());
+        for (FeatureRegistration registration : registry.all()) {
+            if (registration.filterFactory() == null) {
+                continue;
+            }
+            boolean enabled = registration.alwaysEnabled() || roster.hasFeature(registration.featureId());
+            if (enabled) {
+                addFilter(registration.filterFactory().get());
+            }
         }
-        if (roster.hasFeature("swimlevel")) {
-            addFilter(new SwimLevelFilter());
-        }
-        if (roster.hasFeature("medical")) {
-            addFilter(new MedicalFilter());
-        }
-
-
     }
 }

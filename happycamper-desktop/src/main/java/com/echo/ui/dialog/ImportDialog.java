@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 import com.echo.domain.EnhancedRoster;
+import com.echo.feature.FeatureRegistration;
 import com.echo.feature.RosterFeature;
 import com.echo.logging.WarningManager;
 import com.echo.service.ImportSettings;
@@ -82,14 +83,15 @@ public class ImportDialog extends InputsDialog {
         Map<String, Boolean> featureMap = new LinkedHashMap<>();
         List<String> cachedFeatures = cachedSettings.getEnabledFeatureIds();
 
-        // Add all available features to the map
-        for (RosterFeature feature : rosterService.getAvailableFeatures()) {
-            // Skip activity feature as it's always enabled
-            if (!feature.getFeatureId().equals("activity")) {
-                // Use cached value if available, otherwise default to true
-                boolean isEnabled = cachedFeatures.isEmpty() || cachedFeatures.contains(feature.getFeatureId());
-                featureMap.put(feature.getFeatureName(), isEnabled);
+        // Add user-selectable features to the map, skipping always-enabled ones.
+        // The registry is the single source of truth for which features are user-toggleable.
+        for (FeatureRegistration registration : rosterService.getFeatureRegistry().all()) {
+            if (registration.alwaysEnabled()) {
+                continue;
             }
+            RosterFeature feature = registration.feature();
+            boolean isEnabled = cachedFeatures.isEmpty() || cachedFeatures.contains(feature.getFeatureId());
+            featureMap.put(feature.getFeatureName(), isEnabled);
         }
 
         // Create the feature selector with a descriptive title and include "Select All" option
@@ -135,16 +137,15 @@ public class ImportDialog extends InputsDialog {
         File camperFile = camperFileSelector.getValue();
         File activityFile = activityFileSelector.getValue();
 
-        // Get selected features
+        // Get selected features. Always-enabled features are added unconditionally;
+        // user-toggleable features are included only if their checkbox is selected.
         Map<String, Boolean> featureMap = featureSelector.getValue();
         List<String> enabledFeatureIds = new ArrayList<>();
-        enabledFeatureIds.add("activity"); // Activity is always enabled
-
-        // Add other selected features
-        for (RosterFeature feature : rosterService.getAvailableFeatures()) {
-            if (!feature.getFeatureId().equals("activity") &&
-                featureMap.containsKey(feature.getFeatureName()) &&
-                featureMap.get(feature.getFeatureName())) {
+        for (FeatureRegistration registration : rosterService.getFeatureRegistry().all()) {
+            RosterFeature feature = registration.feature();
+            if (registration.alwaysEnabled()) {
+                enabledFeatureIds.add(feature.getFeatureId());
+            } else if (Boolean.TRUE.equals(featureMap.get(feature.getFeatureName()))) {
                 enabledFeatureIds.add(feature.getFeatureId());
             }
         }
@@ -264,32 +265,25 @@ public class ImportDialog extends InputsDialog {
      * @param featureIds Array of feature IDs to enable
      */
     private void updateFeatureSelection(String[] featureIds) {
-        // Create a map of feature ID to feature object for quick lookup
-        Map<String, RosterFeature> featureMap = new LinkedHashMap<>();
-        for (RosterFeature feature : rosterService.getAvailableFeatures()) {
-            featureMap.put(feature.getFeatureId(), feature);
+        Map<String, RosterFeature> toggleableById = new LinkedHashMap<>();
+        for (FeatureRegistration registration : rosterService.getFeatureRegistry().all()) {
+            if (!registration.alwaysEnabled()) {
+                toggleableById.put(registration.featureId(), registration.feature());
+            }
         }
 
-        // Create a map of feature names to boolean values
         Map<String, Boolean> selectionMap = new LinkedHashMap<>();
         for (Map.Entry<String, Boolean> entry : featureSelector.getValue().entrySet()) {
-            selectionMap.put(entry.getKey(), false); // Start with all unchecked
+            selectionMap.put(entry.getKey(), false);
         }
 
-        // Enable selected features
         for (String featureId : featureIds) {
-            // Skip activity as it's always enabled
-            if (featureId.equals("activity")) {
-                continue;
-            }
-
-            RosterFeature feature = featureMap.get(featureId);
+            RosterFeature feature = toggleableById.get(featureId);
             if (feature != null) {
                 selectionMap.put(feature.getFeatureName(), true);
             }
         }
 
-        // Update the selector
         featureSelector.setValue(selectionMap);
     }
 }

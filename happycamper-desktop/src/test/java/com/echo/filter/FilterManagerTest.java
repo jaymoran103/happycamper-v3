@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.echo.HappyCamper;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -95,15 +96,13 @@ public class FilterManagerTest {
     @Test
     @DisplayName("Test creating filters for roster")
     public void testCreateFiltersForRoster() {
-        // Create filters for the roster
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
-        // Verify the correct filters were created
-        // Note: program-list (SortedProgramFilter) is no longer created by core FilterManager;
-        // it is added by the desktop layer after calling createFiltersForRoster.
-        // "preference" feature not enabled in this test, so only AssignmentFilter is created.
-        assertTrue(filterManager.getFilterCount() >= 1);
+        // assignment is always-enabled; program is enabled on the roster so the desktop
+        // SortedProgramFilter is added via the registry.
+        assertTrue(filterManager.getFilterCount() >= 2);
         assertNotNull(filterManager.getFilter("assignment"));
+        assertNotNull(filterManager.getFilter("program-list"));
     }
 
     @Test
