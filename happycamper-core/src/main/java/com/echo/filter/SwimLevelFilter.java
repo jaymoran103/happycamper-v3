@@ -31,7 +31,6 @@ public class SwimLevelFilter implements RosterFilter {
 
     @Override
     public boolean apply(Camper camper) {
-        //System.out.println("PreferenceFilter.apply: Checking camper " + camper.getId());
         String relevantField = camper.getValue(RosterHeader.SWIMCONFLICTS.standardName);
         if (relevantField == null) {
             return true;

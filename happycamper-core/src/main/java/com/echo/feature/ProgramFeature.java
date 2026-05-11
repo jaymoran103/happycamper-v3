@@ -152,7 +152,6 @@ public class ProgramFeature implements RosterFeature {
             String espValue = camper.getValue(RosterHeader.ESP.camperRosterName);
             String programValue = extractProgramFromESP(espValue, currentSession, warningManager);
             // If program extraction failed, use the original ESP value and log a warning
-            // System.out.println(espValue+"->"+programValue);
             if (programValue == null) {
                 programValue = espValue;
                 warningManager.logWarning(RosterWarning.create_programParsingFailure(

@@ -102,69 +102,46 @@ public class RosterService {
             }
 
             // Apply each enabled feature
-            //System.out.println("RosterService.createEnhancedRoster: Enabled feature IDs: " + enabledFeatureIds);
             for (String featureId : enabledFeatureIds) {
-                //System.out.println("RosterService.createEnhancedRoster: Processing feature ID: " + featureId);
                 RosterFeature feature = findFeature(featureId);
                 if (feature != null) {
-                    //System.out.println("RosterService.createEnhancedRoster: Found feature: " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
 
                     // Prevalidate feature, skipping on failure
-                    //System.out.println("RosterService.createEnhancedRoster: Prevalidating feature: " + feature.getFeatureId());
                     boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
-                    //System.out.println("RosterService.createEnhancedRoster: Prevalidation result: " + preValidated);
 
                     if (!preValidated) {
-                        //System.out.println("RosterService.createEnhancedRoster: Prevalidation failed for feature: " + feature.getFeatureId());
                         // If ActivityFeature fails validation, abort the entire process
                         // since it's a core feature that other features depend on
                         if (feature instanceof ActivityFeature) {
-                            //System.out.println("RosterService.createEnhancedRoster: ActivityFeature failed validation, aborting");
                             return null;
                         }
                         // For other features, just skip this feature and continue
-                        //System.out.println("RosterService.createEnhancedRoster: Skipping feature: " + feature.getFeatureId());
                         continue;
                     }
 
                     // Apply feature, with special handling for ActivityFeature
                     // which needs access to the activity roster
-                    //System.out.println("RosterService.createEnhancedRoster: Applying feature: " + feature.getFeatureId());
                     try {
                         if (feature instanceof ActivityFeature activityFeature) {
-                            //System.out.println("RosterService.createEnhancedRoster: Applying ActivityFeature with activity roster");
                             activityFeature.applyFeature(enhancedRoster, activityRoster, warningManager);
                         } else {
-                            //System.out.println("RosterService.createEnhancedRoster: Applying regular feature");
                             feature.applyFeature(enhancedRoster, warningManager);
                         }
-                        //System.out.println("RosterService.createEnhancedRoster: Feature applied successfully: " + feature.getFeatureId());
                     } catch (Exception e) {
-                        //System.out.println("RosterService.createEnhancedRoster: Error applying feature: " + feature.getFeatureId() + ": " + e.getMessage());
                         e.printStackTrace();
                         throw e;
                     }
 
 
                     // Perform post-validation to ensure the feature was applied correctly
-                    //System.out.println("RosterService.createEnhancedRoster: Post-validating feature: " + feature.getFeatureId());
                     boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
-                    //System.out.println("RosterService.createEnhancedRoster: Post-validation result: " + postValidated);
 
                     // If post-validation fails, the problem with the roster is critical enough to scrap the whole process
                     // FUTURE - Save an enhanced roster copy before applying each feature, revert to valid version if post-validation fails
                     if (!postValidated) {
-                        //System.out.println("RosterService.createEnhancedRoster: Post-validation failed for feature: " + feature.getFeatureId() + ", aborting");
                         return null;
                     }
-
-                    //System.out.println("RosterService.createEnhancedRoster: Feature " + feature.getFeatureId() + " successfully applied and validated");
-                    //System.out.println("RosterService.createEnhancedRoster: Enabled features in roster: " + enhancedRoster.getEnabledFeatures());
-
                 }
-
-
-
             }
 
             // Sort headers by order once they're all added for consistent display
@@ -195,21 +172,12 @@ public class RosterService {
      * @return The matching RosterFeature instance, or null if not found
      */
     private RosterFeature findFeature(String featureId) {
-        //System.out.println("RosterService.findFeature: Looking for feature with ID: " + featureId);
-
-        //System.out.println("RosterService.findFeature: Available features:");
-        //for (RosterFeature feature : availableFeatures) {
-        //    System.out.println("  - " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
-        //}
-
+        
         for (RosterFeature feature : availableFeatures) {
             if (feature.getFeatureId().equals(featureId)) {
-                //System.out.println("RosterService.findFeature: Found feature: " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
                 return feature;
             }
         }
-
-        //System.out.println("RosterService.findFeature: Feature not found: " + featureId);
         return null;
     }
 

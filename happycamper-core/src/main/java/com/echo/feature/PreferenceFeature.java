@@ -157,31 +157,22 @@ public class PreferenceFeature implements RosterFeature {
         calculateAndSetPercentiles(roster, camperScores);
         camperScores = null;
 
-        //System.out.println("PreferenceFeature.applyFeature: Enabling preference feature");
         roster.enableFeature(FEATURE_ID);
-        //System.out.println("PreferenceFeature.applyFeature: Preference feature enabled");
     }
 
     @Override
     public boolean preValidate(EnhancedRoster roster, WarningManager warningManager) {
-        //System.out.println("PreferenceFeature.preValidate: Validating preference feature");
-
         // Ensure all required headers are present
         boolean lacksHeader = false;
         for (String header : requiredHeaders) {
-            //System.out.println("PreferenceFeature.preValidate: Checking for required header: " + header);
             if (!roster.hasHeader(header)) {
-                //System.out.println("PreferenceFeature.preValidate: Missing required header: " + header);
                 RosterWarning warning = RosterWarning.create_missingFeatureHeader(header, FEATURE_NAME);
                 warningManager.logWarning(warning);
                 lacksHeader = true; // Mark that we're missing a required header
-            } else {
-                //System.out.println("PreferenceFeature.preValidate: Found required header: " + header);
             }
         }
 
         boolean result = !lacksHeader;
-        //System.out.println("PreferenceFeature.preValidate: Validation result: " + result);
         return result; // Returns false if any required headers are missing
     }
 

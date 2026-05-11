@@ -44,7 +44,6 @@ public class AssignmentFilter implements RosterFilter {
         try {
             int assignmentCount = Integer.parseInt(value);
             boolean visible = roundVisibility.getOrDefault(assignmentCount, true);
-            //System.out.println("AssignmentFilter: Camper " + camper.getId() + " with " + assignmentCount + " rounds is " + (visible ? "visible" : "hidden"));
             return visible;
         } catch (NumberFormatException e) {
             return true;
@@ -68,7 +67,6 @@ public class AssignmentFilter implements RosterFilter {
      * @param visible true to show campers with this round count, false to hide them
      */
     public void setRoundVisible(int roundCount, boolean visible) {
-        //System.out.println("AssignmentFilter.setRoundVisible: Setting round " + roundCount + " visibility to " + visible);
         roundVisibility.put(roundCount, visible);
     }
 
