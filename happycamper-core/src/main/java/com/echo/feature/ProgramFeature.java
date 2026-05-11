@@ -138,7 +138,9 @@ public class ProgramFeature implements RosterFeature {
      * @param warningManager The warning manager to use for logging issues
      */
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
+    public void applyFeature(EnhancementContext context) {
+        EnhancedRoster roster = context.getRoster();
+        WarningManager warningManager = context.getWarningManager();
         // Add the new header
         for (String header : getAddedHeaders()) {
             roster.addHeader(header);

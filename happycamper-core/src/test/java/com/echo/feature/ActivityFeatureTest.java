@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.echo.domain.ActivityRoster;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -148,10 +149,10 @@ public class ActivityFeatureTest {
     }
 
     @Test
-    @DisplayName("Test standard applyFeature throws exception")
-    public void testStandardApplyFeatureThrowsException() {
-        assertThrows(UnsupportedOperationException.class, () -> {
-            feature.applyFeature(enhancedRoster, warningManager);
+    @DisplayName("ActivityFeature.applyFeature throws when context has no ActivityRoster")
+    public void testApplyFeatureRequiresActivityRoster() {
+        assertThrows(IllegalStateException.class, () -> {
+            feature.applyFeature(new EnhancementContext(enhancedRoster, null, warningManager));
         });
     }
 
@@ -166,7 +167,7 @@ public class ActivityFeatureTest {
     @DisplayName("Test applyFeature with activity roster")
     public void testApplyFeatureWithActivityRoster() {
         // Apply the feature
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         // Verify the feature is enabled
         assertTrue(enhancedRoster.hasFeature("activity"));
@@ -196,7 +197,7 @@ public class ActivityFeatureTest {
     @DisplayName("Test getActivityForCamper static method")
     public void testGetActivityForCamper() {
         // Apply the feature first
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         // Test with camper ID
         String johnId = "john_doe_5th";
@@ -223,7 +224,7 @@ public class ActivityFeatureTest {
     @DisplayName("Test getAssignmentCount static method")
     public void testGetAssignmentCount() {
         // Apply the feature first
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         String johnId = "john_doe_5th";
         String janeId = "jane_smith_6th";
@@ -253,7 +254,7 @@ public class ActivityFeatureTest {
         activityRoster.addCamper(new Camper(duplicateActivity));
 
         // Apply the feature
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         // Verify that warnings were generated
         assertFalse(warningManager.getWarningLog().isEmpty(), "Should have warnings");
@@ -296,7 +297,7 @@ public class ActivityFeatureTest {
         activityRoster.addCamper(new Camper(orphanedActivity));
 
         // Apply the feature
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         // Verify that a warning was generated for the orphaned activity
         boolean foundOrphanWarning = false;
@@ -329,7 +330,7 @@ public class ActivityFeatureTest {
         activityRoster.addCamper(new Camper(invalidRoundActivity));
 
         // Apply the feature
-        feature.applyFeature(enhancedRoster, activityRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(enhancedRoster, activityRoster, warningManager));
 
         // Verify that a warning was generated for the invalid round number
         boolean foundInvalidRoundWarning = false;

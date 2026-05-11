@@ -129,7 +129,9 @@ public class PreferenceFeature implements RosterFeature {
     }
 
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
+    public void applyFeature(EnhancementContext context) {
+        EnhancedRoster roster = context.getRoster();
+        WarningManager warningManager = context.getWarningManager();
 
         camperScores = new HashMap<>();
 

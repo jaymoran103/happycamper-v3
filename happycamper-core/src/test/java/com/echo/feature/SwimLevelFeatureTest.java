@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.echo.domain.Camper;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
 import com.echo.logging.RosterWarning;
@@ -103,7 +104,7 @@ public class SwimLevelFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify results
         assertFalse(warningManager.hasWarnings());
@@ -123,7 +124,7 @@ public class SwimLevelFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify results
         assertFalse(warningManager.hasWarnings());
@@ -143,7 +144,7 @@ public class SwimLevelFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify correct warnings were generated
         assertTrue(warningManager.getWarningLog().containsKey(RosterWarning.WarningType.CAMPER_MISSING_FIELD));
@@ -162,7 +163,7 @@ public class SwimLevelFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify correct warnings were generated
         assertTrue(warningManager.getWarningLog().containsKey(RosterWarning.WarningType.UNKNOWN_SWIM_LEVEL));
@@ -183,7 +184,7 @@ public class SwimLevelFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify results
         assertFalse(warningManager.hasWarnings());

@@ -60,15 +60,15 @@ public interface RosterFeature {
     Map<String, String> getRequiredFormats();
 
     /**
-     * Applies this feature to a roster.
-     * This is the main method that implements the feature's functionality.
-     * It should add any necessary headers, process the data, and update the roster accordingly.
-     * Any issues encountered should be logged to the warning manager rather than throwing exceptions.
+     * Applies this feature to a roster, using the supplied {@link EnhancementContext}.
      *
-     * @param roster The roster to enhance with this feature
-     * @param warningManager The warning manager to use for logging encountered issues while applying
+     * This is the main method that implements the feature's functionality. 
+     * It should add headers, process data, and modify the roster as needed accordingly.
+     * Issues encountered should be logged to the warning manager rather than thrown.
+     *
+     * @param context the enhancement context carrying roster and warning manager
      */
-    void applyFeature(EnhancedRoster roster, WarningManager warningManager);
+    void applyFeature(EnhancementContext context);
 
 
 

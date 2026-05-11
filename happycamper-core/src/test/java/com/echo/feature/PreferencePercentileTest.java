@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.echo.domain.Camper;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
 import com.echo.logging.WarningManager;
@@ -100,7 +101,7 @@ public class PreferencePercentileTest {
         roster.addCamper(camper4);
 
         // Apply the feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify percentile scores
         // camper1 should be 100th percentile (highest score)
@@ -158,7 +159,7 @@ public class PreferencePercentileTest {
         roster.addCamper(camper4);
 
         // Apply the feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify percentile scores
         // camper1 and camper2 should both be 100th percentile (4/4 campers)
@@ -199,7 +200,7 @@ public class PreferencePercentileTest {
         roster.addCamper(camper2);
 
         // Apply the feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify percentile scores
         // camper1 should be 100th percentile (highest score)

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.echo.domain.Camper;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
 import com.echo.logging.WarningManager;
@@ -135,7 +136,7 @@ public class ProgramFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify warnings were generated
         assertTrue(warningManager.hasWarnings());
@@ -154,7 +155,7 @@ public class ProgramFeatureTest {
         roster.addCamper(camper);
 
         // Execute feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify warnings were generated
         assertTrue(warningManager.hasWarnings());
@@ -191,7 +192,7 @@ public class ProgramFeatureTest {
 
         // Apply the feature
         WarningManager localWarningManager = new WarningManager();
-        feature.applyFeature(equalRoster, localWarningManager);
+        feature.applyFeature(new EnhancementContext(equalRoster, null, localWarningManager));
 
         // Verify both programs were extracted correctly (should use the first session found)
         String camper1Id = "session1_camper_";
@@ -225,7 +226,7 @@ public class ProgramFeatureTest {
 
         // Apply the feature
         WarningManager localWarningManager = new WarningManager();
-        feature.applyFeature(complexRoster, localWarningManager);
+        feature.applyFeature(new EnhancementContext(complexRoster, null, localWarningManager));
 
         // Verify programs were extracted correctly
         String camper1Id = "complex_format_";
@@ -253,7 +254,7 @@ public class ProgramFeatureTest {
 
         // Apply the feature
         WarningManager localWarningManager = new WarningManager();
-        feature.applyFeature(invalidRoster, localWarningManager);
+        feature.applyFeature(new EnhancementContext(invalidRoster, null, localWarningManager));
 
         // Verify the original ESP value was used
         String camperId = "invalid_format_";

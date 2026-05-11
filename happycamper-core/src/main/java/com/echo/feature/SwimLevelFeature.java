@@ -140,7 +140,9 @@ public class SwimLevelFeature implements RosterFeature {
     }
 
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
+    public void applyFeature(EnhancementContext context) {
+        EnhancedRoster roster = context.getRoster();
+        WarningManager warningManager = context.getWarningManager();
 
         for (String header : getAddedHeaders()) {
             roster.addHeader(header);

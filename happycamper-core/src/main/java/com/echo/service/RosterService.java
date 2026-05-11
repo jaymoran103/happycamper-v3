@@ -9,7 +9,8 @@ import com.echo.domain.Camper;
 import com.echo.domain.CamperRoster;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
-import com.echo.feature.ActivityFeature;
+import com.echo.feature.EnhancementContext;
+import com.echo.feature.FeatureRegistration;
 import com.echo.feature.FeatureRegistry;
 import com.echo.feature.RosterFeature;
 import com.echo.filter.FilterManager;
@@ -99,46 +100,41 @@ public class RosterService {
                 enhancedRoster.addCamper(camper);
             }
 
-            // Apply each enabled feature
+            // Apply each enabled feature via a single EnhancementContext, which carries
+            // the activity roster for features that need it (ActivityFeature) and is
+            // ignored by features that don't.
+            EnhancementContext context = new EnhancementContext(enhancedRoster, activityRoster, warningManager);
+
             for (String featureId : enabledFeatureIds) {
-                RosterFeature feature = findFeature(featureId);
-                if (feature != null) {
+                FeatureRegistration registration = featureRegistry.find(featureId).orElse(null);
+                if (registration == null) {
+                    continue;
+                }
+                RosterFeature feature = registration.feature();
 
-                    // Prevalidate feature, skipping on failure
-                    boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
-
-                    if (!preValidated) {
-                        // If ActivityFeature fails validation, abort the entire process
-                        // since it's a core feature that other features depend on
-                        if (feature instanceof ActivityFeature) {
-                            return null;
-                        }
-                        // For other features, just skip this feature and continue
-                        continue;
-                    }
-
-                    // Apply feature, with special handling for ActivityFeature
-                    // which needs access to the activity roster
-                    try {
-                        if (feature instanceof ActivityFeature activityFeature) {
-                            activityFeature.applyFeature(enhancedRoster, activityRoster, warningManager);
-                        } else {
-                            feature.applyFeature(enhancedRoster, warningManager);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw e;
-                    }
-
-
-                    // Perform post-validation to ensure the feature was applied correctly
-                    boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
-
-                    // If post-validation fails, the problem with the roster is critical enough to scrap the whole process
-                    // FUTURE - Save an enhanced roster copy before applying each feature, revert to valid version if post-validation fails
-                    if (!postValidated) {
+                // Prevalidate feature, skipping (or aborting) on failure.
+                // Always-enabled features (like ActivityFeature) are prerequisites for the rest of the pipeline, 
+                // so their failure aborts the whole import.
+                boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
+                if (!preValidated) {
+                    if (registration.alwaysEnabled()) {
                         return null;
                     }
+                    continue;
+                }
+
+                try {
+                    feature.applyFeature(context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
+
+                // Post-validation: if the feature left the roster in an invalid state,
+                // scrap the whole process.
+                boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
+                if (!postValidated) {
+                    return null;
                 }
             }
 
@@ -169,9 +165,6 @@ public class RosterService {
      * @param featureId The ID of the feature to find
      * @return The matching RosterFeature instance, or null if not found
      */
-    private RosterFeature findFeature(String featureId) {
-        return featureRegistry.find(featureId).map(r -> r.feature()).orElse(null);
-    }
 
     /**
      * Gets all available features that can be applied to rosters.
