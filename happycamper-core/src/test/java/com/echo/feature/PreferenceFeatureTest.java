@@ -16,6 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import com.echo.domain.CampConfig;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -116,7 +117,7 @@ public class PreferenceFeatureTest {
         );
 
         roster.addCamper(camper);
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify all expected fields are populated
         assertTrue(camper.hasValue(RosterHeader.PREFERENCE_SCORE.standardName));
@@ -160,7 +161,7 @@ public class PreferenceFeatureTest {
         Camper camper = createTestCamper(preferences, roundCount, r1, r2, r3);
 
         roster.addCamper(camper);
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         assertEquals(expectedScore,
             Integer.parseInt(camper.getValue(RosterHeader.PREFERENCE_SCORE.standardName)));
@@ -199,7 +200,7 @@ public class PreferenceFeatureTest {
         );
 
         roster.addCamper(camper);
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify unrequested activities
         String unrequestedActivities = camper.getValue(RosterHeader.UNREQUESTED_ACTIVITIES.standardName);
@@ -222,7 +223,7 @@ public class PreferenceFeatureTest {
         roster.addCamper(camper2);
         roster.addCamper(camper3);
 
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify percentiles
         // camper1 should have highest percentile (100)
@@ -255,7 +256,7 @@ public class PreferenceFeatureTest {
         roster.addCamper(camper);
 
         // Apply the feature
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify that a warning was generated
         boolean foundMissingFieldWarning = false;
@@ -291,7 +292,7 @@ public class PreferenceFeatureTest {
         );
 
         roster.addCamper(camper);
-        feature.applyFeature(roster, warningManager);
+        feature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify score by round format
         String scoreByRound = camper.getValue(RosterHeader.SCORE_BY_ROUND.standardName);

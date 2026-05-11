@@ -75,7 +75,9 @@ public class MedicalFeature implements RosterFeature {
     }
 
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
+    public void applyFeature(EnhancementContext context) {
+        EnhancedRoster roster = context.getRoster();
+        WarningManager warningManager = context.getWarningManager();
         // This feature doesn't add any headers or modify data
         // It just checks that campers have the required medical notes field
         

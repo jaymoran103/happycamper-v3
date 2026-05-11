@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.echo.HappyCamper;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -69,12 +70,7 @@ public class FilterSystemIntegrationTest {
     @Test
     @DisplayName("Test creating filters for roster")
     public void testCreatingFiltersForRoster() {
-        // Create filters for the roster (core filters only)
-        filterManager.createFiltersForRoster(roster);
-        // Desktop adds program filter separately (SortedProgramFilter is Swing-coupled)
-        if (roster.hasFeature("program")) {
-            filterManager.addFilter(new SortedProgramFilter());
-        }
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Verify the correct filters were created
         assertEquals(3, filterManager.getFilterCount());
@@ -87,7 +83,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test filter sidebar creation")
     public void testFilterSidebarCreation() {
         // Create filters for the roster
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Create the filter sidebar
         FilterSidebar sidebar = new FilterSidebar(roster, filterManager);
@@ -103,7 +99,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test applying assignment filter")
     public void testApplyingAssignmentFilter() {
         // Create filters for the roster
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Get the assignment filter
         AssignmentFilter assignmentFilter = (AssignmentFilter) filterManager.getFilter("assignment");
@@ -128,7 +124,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test applying program filter")
     public void testApplyingProgramFilter() {
         // Create filters for the roster (core filters only)
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
         // Desktop adds program filter separately
         if (roster.hasFeature("program")) {
             filterManager.addFilter(new SortedProgramFilter());
@@ -157,7 +153,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test applying preference filter")
     public void testApplyingPreferenceFilter() {
         // Create filters for the roster
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Get the preference filter
         PreferenceFilter preferenceFilter = (PreferenceFilter) filterManager.getFilter("preference");
@@ -182,7 +178,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test applying multiple filters")
     public void testApplyingMultipleFilters() {
         // Create filters for the roster (core filters only)
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
         // Desktop adds program filter separately
         if (roster.hasFeature("program")) {
             filterManager.addFilter(new SortedProgramFilter());
@@ -222,7 +218,7 @@ public class FilterSystemIntegrationTest {
     @DisplayName("Test roster table with filters")
     public void testRosterTableWithFilters() {
         // Create filters for the roster
-        filterManager.createFiltersForRoster(roster);
+        filterManager.createFiltersForRoster(roster, HappyCamper.buildDesktopFeatureRegistry());
 
         // Get the assignment filter
         AssignmentFilter assignmentFilter = (AssignmentFilter) filterManager.getFilter("assignment");

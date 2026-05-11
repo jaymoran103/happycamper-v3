@@ -138,7 +138,9 @@ public class ProgramFeature implements RosterFeature {
      * @param warningManager The warning manager to use for logging issues
      */
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
+    public void applyFeature(EnhancementContext context) {
+        EnhancedRoster roster = context.getRoster();
+        WarningManager warningManager = context.getWarningManager();
         // Add the new header
         for (String header : getAddedHeaders()) {
             roster.addHeader(header);
@@ -152,7 +154,6 @@ public class ProgramFeature implements RosterFeature {
             String espValue = camper.getValue(RosterHeader.ESP.camperRosterName);
             String programValue = extractProgramFromESP(espValue, currentSession, warningManager);
             // If program extraction failed, use the original ESP value and log a warning
-            // System.out.println(espValue+"->"+programValue);
             if (programValue == null) {
                 programValue = espValue;
                 warningManager.logWarning(RosterWarning.create_programParsingFailure(

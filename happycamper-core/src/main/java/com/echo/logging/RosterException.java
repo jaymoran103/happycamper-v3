@@ -3,7 +3,8 @@ package com.echo.logging;
 import java.io.File;
 import java.util.List;
 
-// import com.echo.HappyCamper; — Removing dependency on desktop entry point for control over logging. FUTURE: Will replace with SLF4J
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Exception class for roster-related errors with user-friendly information.
@@ -16,6 +17,8 @@ import java.util.List;
  * formatting and appropriate context information.
  */
 public class RosterException extends Exception {
+
+    private static final Logger log = LoggerFactory.getLogger(RosterException.class);
 
     /**
      * Enumeration of error types for categorization and display purposes.
@@ -200,16 +203,16 @@ public class RosterException extends Exception {
 
     /**
      * Factory method builds an exception that wraps a standard exception with detailed stack trace information.
-     *
+     * Before returning the wrapper exception, logs the full stack trace at debug level.
+     * 
      * @param summary Brief summary of the issue
      * @param e The exception to wrap
      * @return DetailedRosterException instance with stack trace information
      */
     public static RosterException create_normalWrapper(String summary, Exception e) {
 
-        //Prints stack trace if boolean is true in RosterApplication. 
-        //Allows developer to toggle printing for all unanticipated exception, while still handling elegantly by wrapping as RosterExceptions
-        conditionalPrint(e);
+        log.debug("Wrapped exception details", e);
+
 
         String basicExplanation = summary;
         String detailedExplanation = "If this keeps happening, try using a different file, or let Jay know.";
@@ -285,17 +288,5 @@ public class RosterException extends Exception {
      */
     public boolean isWrapper(){
         return isWrapper;
-    }
-
-
-    /**
-     * Prints stack trace if boolean is true in RosterApplication. 
-     * Allows developer to toggle printing for all unanticipated exception, 
-     * while still handling elegantly by wrapping as RosterExceptions
-     * @param e
-     */
-    public static void conditionalPrint(Exception e){
-        // FUTURE: replace with SLF4J logger call
-        e.printStackTrace();
     }
 }

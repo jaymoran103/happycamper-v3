@@ -1,7 +1,6 @@
 package com.echo.service;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.echo.domain.ActivityRoster;
@@ -10,12 +9,10 @@ import com.echo.domain.Camper;
 import com.echo.domain.CamperRoster;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
-import com.echo.feature.ActivityFeature;
-import com.echo.feature.MedicalFeature;
-import com.echo.feature.PreferenceFeature;
-import com.echo.feature.ProgramFeature;
+import com.echo.feature.EnhancementContext;
+import com.echo.feature.FeatureRegistration;
+import com.echo.feature.FeatureRegistry;
 import com.echo.feature.RosterFeature;
-import com.echo.feature.SwimLevelFeature;
 import com.echo.filter.FilterManager;
 import com.echo.logging.RosterException;
 import com.echo.logging.WarningManager;
@@ -33,36 +30,32 @@ import com.echo.logging.WarningManager;
 public class RosterService {
     private final ImportService importService;
     private final ExportService exportService;
-    private final List<RosterFeature> availableFeatures;
+    private final FeatureRegistry featureRegistry;
     private WarningManager warningManager; // Created new for each processing operation
 
-
-    //TODO manage exportSettings similarly?
-    private ViewSettings viewSettings;
-
     /**
-     * Creates a new RosterService with the given import and export services.
-     * Initializes the list of available features that can be applied to rosters.
-     *
-     * @param importService The service for importing data from files
-     * @param exportService The service for exporting data to files
+     * Creates a new RosterService backed by the default core feature registry.
      */
     public RosterService(ImportService importService, ExportService exportService) {
+        this(importService, exportService, FeatureRegistry.defaults(CampConfig.defaults()));
+    }
+
+    /**
+     * Creates a new RosterService with an explicit feature registry. Desktop callers
+     * pass a registry pre-populated with Swing-coupled filters; web callers use core
+     * defaults.
+     */
+    public RosterService(ImportService importService, ExportService exportService, FeatureRegistry featureRegistry) {
         this.importService = importService;
         this.exportService = exportService;
+        this.featureRegistry = featureRegistry;
+    }
 
-        this.viewSettings = new ViewSettings();
-
-        // Register available features using factory defaults.
-        // Each feature is constructed with a CampConfig, ensuring well-defined configuration
-        CampConfig config = CampConfig.defaults();
-        availableFeatures = new ArrayList<>();
-        availableFeatures.add(new ActivityFeature(config));
-        availableFeatures.add(new ProgramFeature());
-        availableFeatures.add(new PreferenceFeature(config));
-        availableFeatures.add(new SwimLevelFeature());
-        availableFeatures.add(new MedicalFeature(config));
-        // Add additional features here
+    /**
+     * @return the registry of features and filter pairings used by this service
+     */
+    public FeatureRegistry getFeatureRegistry() {
+        return featureRegistry;
     }
 
     /**
@@ -107,70 +100,42 @@ public class RosterService {
                 enhancedRoster.addCamper(camper);
             }
 
-            // Apply each enabled feature
-            //System.out.println("RosterService.createEnhancedRoster: Enabled feature IDs: " + enabledFeatureIds);
+            // Apply each enabled feature via a single EnhancementContext, which carries
+            // the activity roster for features that need it (ActivityFeature) and is
+            // ignored by features that don't.
+            EnhancementContext context = new EnhancementContext(enhancedRoster, activityRoster, warningManager);
+
             for (String featureId : enabledFeatureIds) {
-                //System.out.println("RosterService.createEnhancedRoster: Processing feature ID: " + featureId);
-                RosterFeature feature = findFeature(featureId);
-                if (feature != null) {
-                    //System.out.println("RosterService.createEnhancedRoster: Found feature: " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
+                FeatureRegistration registration = featureRegistry.find(featureId).orElse(null);
+                if (registration == null) {
+                    continue;
+                }
+                RosterFeature feature = registration.feature();
 
-                    // Prevalidate feature, skipping on failure
-                    //System.out.println("RosterService.createEnhancedRoster: Prevalidating feature: " + feature.getFeatureId());
-                    boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
-                    //System.out.println("RosterService.createEnhancedRoster: Prevalidation result: " + preValidated);
-
-                    if (!preValidated) {
-                        //System.out.println("RosterService.createEnhancedRoster: Prevalidation failed for feature: " + feature.getFeatureId());
-                        // If ActivityFeature fails validation, abort the entire process
-                        // since it's a core feature that other features depend on
-                        if (feature instanceof ActivityFeature) {
-                            //System.out.println("RosterService.createEnhancedRoster: ActivityFeature failed validation, aborting");
-                            return null;
-                        }
-                        // For other features, just skip this feature and continue
-                        //System.out.println("RosterService.createEnhancedRoster: Skipping feature: " + feature.getFeatureId());
-                        continue;
-                    }
-
-                    // Apply feature, with special handling for ActivityFeature
-                    // which needs access to the activity roster
-                    //System.out.println("RosterService.createEnhancedRoster: Applying feature: " + feature.getFeatureId());
-                    try {
-                        if (feature instanceof ActivityFeature activityFeature) {
-                            //System.out.println("RosterService.createEnhancedRoster: Applying ActivityFeature with activity roster");
-                            activityFeature.applyFeature(enhancedRoster, activityRoster, warningManager);
-                        } else {
-                            //System.out.println("RosterService.createEnhancedRoster: Applying regular feature");
-                            feature.applyFeature(enhancedRoster, warningManager);
-                        }
-                        //System.out.println("RosterService.createEnhancedRoster: Feature applied successfully: " + feature.getFeatureId());
-                    } catch (Exception e) {
-                        //System.out.println("RosterService.createEnhancedRoster: Error applying feature: " + feature.getFeatureId() + ": " + e.getMessage());
-                        e.printStackTrace();
-                        throw e;
-                    }
-
-
-                    // Perform post-validation to ensure the feature was applied correctly
-                    //System.out.println("RosterService.createEnhancedRoster: Post-validating feature: " + feature.getFeatureId());
-                    boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
-                    //System.out.println("RosterService.createEnhancedRoster: Post-validation result: " + postValidated);
-
-                    // If post-validation fails, the problem with the roster is critical enough to scrap the whole process
-                    // FUTURE - Save an enhanced roster copy before applying each feature, revert to valid version if post-validation fails
-                    if (!postValidated) {
-                        //System.out.println("RosterService.createEnhancedRoster: Post-validation failed for feature: " + feature.getFeatureId() + ", aborting");
+                // Prevalidate feature, skipping (or aborting) on failure.
+                // Always-enabled features (like ActivityFeature) are prerequisites for the rest of the pipeline, 
+                // so their failure aborts the whole import.
+                boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
+                if (!preValidated) {
+                    if (registration.alwaysEnabled()) {
                         return null;
                     }
-
-                    //System.out.println("RosterService.createEnhancedRoster: Feature " + feature.getFeatureId() + " successfully applied and validated");
-                    //System.out.println("RosterService.createEnhancedRoster: Enabled features in roster: " + enhancedRoster.getEnabledFeatures());
-
+                    continue;
                 }
 
+                try {
+                    feature.applyFeature(context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
 
-
+                // Post-validation: if the feature left the roster in an invalid state,
+                // scrap the whole process.
+                boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
+                if (!postValidated) {
+                    return null;
+                }
             }
 
             // Sort headers by order once they're all added for consistent display
@@ -200,24 +165,6 @@ public class RosterService {
      * @param featureId The ID of the feature to find
      * @return The matching RosterFeature instance, or null if not found
      */
-    private RosterFeature findFeature(String featureId) {
-        //System.out.println("RosterService.findFeature: Looking for feature with ID: " + featureId);
-
-        //System.out.println("RosterService.findFeature: Available features:");
-        //for (RosterFeature feature : availableFeatures) {
-        //    System.out.println("  - " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
-        //}
-
-        for (RosterFeature feature : availableFeatures) {
-            if (feature.getFeatureId().equals(featureId)) {
-                //System.out.println("RosterService.findFeature: Found feature: " + feature.getFeatureId() + " (" + feature.getFeatureName() + ")");
-                return feature;
-            }
-        }
-
-        //System.out.println("RosterService.findFeature: Feature not found: " + featureId);
-        return null;
-    }
 
     /**
      * Gets all available features that can be applied to rosters.
@@ -226,7 +173,7 @@ public class RosterService {
      * @return A new list containing all available RosterFeature instances
      */
     public List<RosterFeature> getAvailableFeatures() {
-        return new ArrayList<>(availableFeatures);
+        return featureRegistry.getFeatures();
     }
 
     /**
@@ -242,14 +189,6 @@ public class RosterService {
         }
         return warningManager;
     }
-
-    /**
-     * Gets the current view settings.
-     */
-    public ViewSettings getViewSettings() {
-        return viewSettings;
-    }
-
 
     /**
      * Exports a roster using the specified export settings.

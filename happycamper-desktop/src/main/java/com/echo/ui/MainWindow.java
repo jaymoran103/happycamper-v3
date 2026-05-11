@@ -18,8 +18,8 @@ import java.io.File;
 import com.echo.HappyCamper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.filter.FilterManager;
-import com.echo.filter.SortedProgramFilter;
 import com.echo.service.RosterService;
+import com.echo.service.ViewSettings;
 import com.echo.ui.component.RosterTable;
 import com.echo.ui.dialog.ColumnVisibilityDialog;
 import com.echo.ui.dialog.ExportDialog;
@@ -36,6 +36,7 @@ import com.echo.ui.help.PageContentBuilder.HelpPage;
  */
 public class MainWindow extends JFrame {
     private final RosterService rosterService;
+    private final ViewSettings viewSettings = new ViewSettings();
 
     private EnhancedRoster currentRoster;
     private FilterManager filterManager;
@@ -128,15 +129,10 @@ public class MainWindow extends JFrame {
     public void setRoster(EnhancedRoster roster) {
         this.currentRoster = roster;
 
-        // Create filter manager and set up filters
-        //System.out.println("MainWindow.setRoster: Creating filter manager");
+        // Create filter manager and set up filters using the desktop feature registry,
+        // which supplies the Swing-coupled SortedProgramFilter for ProgramFeature.
         filterManager = new FilterManager();
-        filterManager.createFiltersForRoster(roster);
-        // Desktop-specific: SortedProgramFilter is Swing-coupled and excluded from core.
-        // FUTURE: Phase 2 will replace this with a proper registration hook.
-        if (roster.hasFeature("program")) {
-            filterManager.addFilter(new SortedProgramFilter());
-        }
+        filterManager.createFiltersForRoster(roster, rosterService.getFeatureRegistry());
         //System.out.println("MainWindow.setRoster: Filter manager created with " + filterManager.getFilterCount() + " filters");
 
         // Reset column visibility dialog's cached settings, ensuring it matches the new roster
@@ -152,7 +148,7 @@ public class MainWindow extends JFrame {
         roster.resetHeaderVisibility();
 
         // Set roster in table (sync placeholder setting first so the initial render is correct)
-        rosterTable.setUsePlaceholder(rosterService.getViewSettings().isUseDisplayPlaceholder());
+        rosterTable.setUsePlaceholder(viewSettings.isUseDisplayPlaceholder());
         rosterTable.setRoster(roster, filterManager);
 
         // Create and add filter sidebar
@@ -253,7 +249,7 @@ public class MainWindow extends JFrame {
         }
 
         // Show the view settings dialog
-        ViewSettingsDialog viewSettingsDialog = new ViewSettingsDialog(this, rosterService.getViewSettings());
+        ViewSettingsDialog viewSettingsDialog = new ViewSettingsDialog(this, viewSettings);
         viewSettingsDialog.showDialog();
 
         // If settings were confirmed, propagate the new placeholder setting and repaint

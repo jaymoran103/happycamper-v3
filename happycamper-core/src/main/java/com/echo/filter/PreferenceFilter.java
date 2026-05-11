@@ -31,7 +31,6 @@ public class PreferenceFilter implements RosterFilter {
 
     @Override
     public boolean apply(Camper camper) {
-        //System.out.println("PreferenceFilter.apply: Checking camper " + camper.getId());
         String relevantField = camper.getValue(RosterHeader.UNREQUESTED_ACTIVITIES.standardName);
         if (relevantField == null) {
             return true;

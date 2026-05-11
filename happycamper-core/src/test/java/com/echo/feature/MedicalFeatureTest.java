@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.echo.domain.CampConfig;
+import com.echo.feature.EnhancementContext;
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
 import com.echo.domain.RosterHeader;
@@ -111,7 +112,7 @@ public class MedicalFeatureTest {
             new CampConfig.Builder().warnOnMissingMedical(true).build());
 
         // Apply the feature
-        warnEnabledFeature.applyFeature(roster, warningManager);
+        warnEnabledFeature.applyFeature(new EnhancementContext(roster, null, warningManager));
 
         // Verify the feature is enabled
         assertTrue(roster.hasFeature("medical"));
@@ -167,7 +168,7 @@ public class MedicalFeatureTest {
         emptyRoster.addHeader(RosterHeader.MEDICAL_NOTES.camperRosterName);
 
         // Apply the feature
-        feature.applyFeature(emptyRoster, warningManager);
+        feature.applyFeature(new EnhancementContext(emptyRoster, null, warningManager));
 
         // Verify the feature is enabled
         assertTrue(emptyRoster.hasFeature("medical"));
@@ -202,7 +203,7 @@ public class MedicalFeatureTest {
 
         // Apply the feature
         WarningManager localWarningManager = new WarningManager();
-        feature.applyFeature(validRoster, localWarningManager);
+        feature.applyFeature(new EnhancementContext(validRoster, null, localWarningManager));
 
         // Verify the feature is enabled
         assertTrue(validRoster.hasFeature("medical"));

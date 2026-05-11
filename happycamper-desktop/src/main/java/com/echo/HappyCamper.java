@@ -4,7 +4,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 
+import com.echo.domain.CampConfig;
+import com.echo.feature.FeatureRegistration;
+import com.echo.feature.FeatureRegistry;
+import com.echo.feature.ProgramFeature;
+import com.echo.filter.SortedProgramFilter;
 import com.echo.service.ExportService;
 import com.echo.service.ImportService;
 import com.echo.service.RosterService;
@@ -32,19 +38,28 @@ public class HappyCamper {
             System.err.println("Error setting look and feel: " + e.getMessage());
         }
 
-        // Create services
+        // Create services (safe to do off EDT)
         ImportService importService = new ImportService();
         ExportService exportService = new ExportService();
-        RosterService rosterService = new RosterService(importService, exportService);
+        RosterService rosterService = new RosterService(importService, exportService, buildDesktopFeatureRegistry());
 
-        // Create UI immediately instead of using invokeLater
-        createSingleWindow(rosterService);
-
-        if (andStart) {
-            // Only make it visible on EDT
-            SwingUtilities.invokeLater(() -> {
+        // Create and optionally show UI on the EDT
+        Runnable uiTask = () -> {
+            createSingleWindow(rosterService);
+            if (andStart) {
                 mainWindowInstance.setVisible(true);
-            });
+            }
+        };
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            uiTask.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(uiTask);
+            } catch (InvocationTargetException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Failed to initialize UI on EDT", e);
+            }
         }
 
         return mainWindowInstance;
@@ -81,5 +96,15 @@ public class HappyCamper {
         window.automateImport(camperFile, activityFile, features);
     }
 
+    /**
+     * Builds a {@link FeatureRegistry} configured for the desktop module. 
+     * The core defaults have no filter for {@code ProgramFeature} because {@code SortedProgramFilter} depends
+     * on Swing; the desktop registry swaps in that pairing here.
+     */
+    public static FeatureRegistry buildDesktopFeatureRegistry() {
+        FeatureRegistry registry = FeatureRegistry.defaults(CampConfig.defaults());
+        registry.replace("program", new FeatureRegistration(new ProgramFeature(), SortedProgramFilter::new, false));
+        return registry;
+    }
 
 }

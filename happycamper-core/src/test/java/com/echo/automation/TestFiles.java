@@ -161,8 +161,10 @@ public enum TestFiles {
         List<TestFiles> missingFiles = checkAllFiles();
 
         if (!missingFiles.isEmpty()) {
+            //TODO: SLF4J
             System.err.println("Missing test files:");
             for (TestFiles missingFile : missingFiles) {
+                //TODO: SLF4J
                 System.err.println("- " + missingFile.name() + ": " + missingFile.getFullPath());
             }
             return false;

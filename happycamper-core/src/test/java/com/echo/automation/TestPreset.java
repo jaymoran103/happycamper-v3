@@ -193,6 +193,7 @@ public enum TestPreset {
 
 
     public void printReport() {
+        //TODO: SLF4J
         System.out.println("\n===\n");
         System.out.println("Running test mode: " + this.id + (getDescription() != null ? " - " + this.getDescription() : ""));
         System.out.println("Name: " + this.name());

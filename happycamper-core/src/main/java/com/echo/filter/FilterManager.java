@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.echo.domain.Camper;
 import com.echo.domain.EnhancedRoster;
+import com.echo.feature.FeatureRegistration;
+import com.echo.feature.FeatureRegistry;
 
 /**
  * Manager for roster filters.
@@ -21,9 +23,7 @@ public class FilterManager {
      * @param filter The filter to add
      */
     public void addFilter(RosterFilter filter) {
-        //System.out.println("FilterManager.addFilter: Adding filter " + filter.getFilterId() + " (" + filter.getFilterName() + ")");
         filters.put(filter.getFilterId(), filter);
-        //System.out.println("FilterManager.addFilter: Filter count is now " + filters.size());
     }
 
     /**
@@ -52,26 +52,19 @@ public class FilterManager {
      * @return true if the camper passes all filters, false otherwise
      */
     public boolean applyFilters(Camper camper) {
-        //System.out.println("FilterManager.applyFilters: Applying " + filters.size() + " filters to camper " + camper.getId());
-
         // If there are no filters, always show the camper
         if (filters.isEmpty()) {
-            //System.out.println("FilterManager.applyFilters: No filters, showing camper");
             return true;
         }
 
         // A camper passes if it passes ALL filters
         for (RosterFilter filter : filters.values()) {
-            //System.out.println("FilterManager.applyFilters: Applying filter " + filter.getFilterId());
             boolean passes = filter.apply(camper);
-            //System.out.println("FilterManager.applyFilters: Filter " + filter.getFilterId() + " returned " + passes);
             if (!passes) {
-                //System.out.println("FilterManager.applyFilters: Camper " + camper.getId() + " failed filter " + filter.getFilterId());
                 return false;
             }
         }
 
-        //System.out.println("FilterManager.applyFilters: Camper " + camper.getId() + " passed all filters");
         return true;
     }
 
@@ -122,34 +115,25 @@ public class FilterManager {
     }
 
     /**
-     * Creates filters for enabled features in the roster.
+     * Creates filters for enabled features in the roster, driven by the {@link FeatureRegistry}.
+     * Each registration with a non-null filter factory contributes a filter when its feature
+     * is either always-enabled or present on the roster.
      *
-     * @param roster The roster to create filters for
+     * @param roster   the roster to create filters for
+     * @param registry the registry describing feature/filter pairings
      */
-    public void createFiltersForRoster(EnhancedRoster roster) {
-        //System.out.println("FilterManager.createFiltersForRoster: Creating filters for roster");
+    public void createFiltersForRoster(EnhancedRoster roster, FeatureRegistry registry) {
         setRoster(roster);
         filters.clear();
 
-        // Create filters based on enabled features
-
-        // Always add the assignment filter to show basic round counts
-        addFilter(new AssignmentFilter());
-
-        // NOTE: Phase 1: SortedProgramFilter is Swing-coupled and lives in happycamper-desktop.
-        // Desktop callers must add it manually after this method (see MainWindow.setRoster).
-        // FUTURE: Phase 2 will introduce a proper filter-registration hook to remove this note.
-        // addFilter(new CamperRoundsFilter()); Deprecated alternative, keeping in case its helpful for assertion-based validation feature
-        if (roster.hasFeature("preference")) {
-            addFilter(new PreferenceFilter());
+        for (FeatureRegistration registration : registry.all()) {
+            if (registration.filterFactory() == null) {
+                continue;
+            }
+            boolean enabled = registration.alwaysEnabled() || roster.hasFeature(registration.featureId());
+            if (enabled) {
+                addFilter(registration.filterFactory().get());
+            }
         }
-        if (roster.hasFeature("swimlevel")) {
-            addFilter(new SwimLevelFilter());
-        }
-        if (roster.hasFeature("medical")) {
-            addFilter(new MedicalFilter());
-        }
-
-
     }
 }

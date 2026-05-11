@@ -18,8 +18,6 @@
  *   <li>Logging layer - Error and warning handling</li>
  * </ul>
  * 
- * The main entry point for the application is {@link com.echo.HappyCamper}.
- * 
  * @version 2.2.0
  */
 package com.echo;

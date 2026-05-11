@@ -3,11 +3,16 @@ package com.echo.feature;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.RosterHeader;
 
 public class PreferenceFeatureUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(PreferenceFeatureUtils.class);
 
     public static double determinePreferenceScore(Camper camper, int[] roundPoints, String[] assignments, List<String> exemptActivities) {
         // Sum points for each round - used Arrays.stream(roundPoints, 0, roundCount).sum(); but that seemed less efficient for a 3 index array
@@ -109,7 +114,7 @@ public class PreferenceFeatureUtils {
             if (splitItem.length > 2) {
                 // This is a case where there are multiple "and" tokens in the last item
                 // For now, we just log it and proceed with the simple split
-                System.out.println("Potential issue: multiple 'and' tokens in last item");
+                log.warn("Potential issue: multiple 'and' tokens in last item: {}", lastItem);
             }
             preferencesList.removeLast();
             // Add the split items, making sure to trim each one

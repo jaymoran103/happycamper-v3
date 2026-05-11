@@ -128,14 +128,18 @@ public class ActivityFeature implements RosterFeature {
     }
 
     /**
-     * Standard applyFeature method that is overridden to prevent incorrect usage.
-     * The ActivityFeature requires an ActivityRoster to function, so this method
-     * throws an exception to prevent it from being called without the necessary data.
-     * @throws UnsupportedOperationException Always thrown to indicate this method should not be used
+     * Applies the activity feature using data from {@link EnhancementContext#getActivityRoster()}.
+     * Delegates to {@link #applyFeature(EnhancedRoster, ActivityRoster, WarningManager)}.
+     *
+     * @throws IllegalStateException if the context does not carry an activity roster
      */
     @Override
-    public void applyFeature(EnhancedRoster roster, WarningManager warningManager) {
-        throw new UnsupportedOperationException("Activity feature requires an ActivityRoster - use the overloaded version of applyFeature");
+    public void applyFeature(EnhancementContext context) {
+        ActivityRoster activityRoster = context.getActivityRoster();
+        if (activityRoster == null) {
+            throw new IllegalStateException("ActivityFeature requires an ActivityRoster in the EnhancementContext");
+        }
+        applyFeature(context.getRoster(), activityRoster, context.getWarningManager());
     }
 
 
