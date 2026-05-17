@@ -1,7 +1,7 @@
 # HappyCamper-v3 Roadmap
 
-**Last updated:** 2026-05-16
-**Status:** Active — Sprint 1 in planning
+**Last updated:** 2026-05-17
+**Status:** Active — Sprint 1 in progress (Phase 0 complete)
 
 This document is the single source of truth for project sequencing. It consolidates the current sprint plan with the outstanding architectural work originally tracked in `-PLANNING/PHASE-PLAN.md` (2026-05-04). PHASE-PLAN.md is superseded by this file once Sprint 1 begins.
 
@@ -27,13 +27,13 @@ Land agentic infrastructure on desktop, then ship the parked Phase 4 work as a w
 
 ## Sprint 1 Phases
 
-### Phase 0 — Rescue & Setup *(half-session, mechanical)*
+### Phase 0 — Rescue & Setup *(complete — landed 2026-05-17 via PR #4)*
 
-- [ ] Install GitHub MCP server; confirm `gh` CLI auth
-- [ ] Scaffold `.github/ISSUE_TEMPLATE/` (bug, feature; both with `area: core|desktop|web|all` dropdown)
-- [ ] Add labels: `area:core`, `area:desktop`, `area:web`, `type:bug`, `type:feat`, `type:infra`
-- [ ] Add minimal CODEOWNERS
-- [ ] Cleanup pass (low priority): delete `appmod/java-upgrade-20260506153848` branch + `stash@{2}` once confirmed unwanted. Phase-1/2/3 branches can also go since they're merged.
+- [x] Install GitHub MCP server; confirm `gh` CLI auth
+- [x] Scaffold `.github/ISSUE_TEMPLATE/` (bug, feature; both with `area: core|desktop|web|all|infra` dropdown)
+- [x] Add labels: 8 labels — `area:{core,desktop,web,infra}` + `type:{bug,feat,infra,debt}` (expanded from the original 6 listed here)
+- [x] Add minimal CODEOWNERS
+- [x] Cleanup pass: deleted `appmod/java-upgrade-20260506153848` + `phase-1/2/3` branches (local + remote) + three stale stashes. Retro at `-PLANNING/sprint-1/phase-0-rescue-setup/retro.md`.
 
 ### Phase 1 — Desktop test wiring + presets *(largest engineering phase)*
 
@@ -91,6 +91,13 @@ Land agentic infrastructure on desktop, then ship the parked Phase 4 work as a w
   - Phase 1 reveals presets need their own module → restructure Phase 1
   - Phase 3 integration breaks something in `RosterService` → reassess assertion design
   - Phase 5 web deployment story is non-trivial → split into its own sprint
+
+---
+
+## Carryover items (small, schedule when convenient)
+
+- **README.md `Getting Started`** is stale — still says `cd redo` and the pre-split artifact name (`roster-manager-2.2-SNAPSHOT.jar`). Fix in a follow-up PR; can ride along with any larger doc update or stand alone.
+- **`TestFileFinder.TEST_RESOURCES_DIR`** is hardcoded to `redo/src/test/resources/testRosters` (pre-module-split path). Phase 1 will touch this; fix incidentally there.
 
 ---
 

@@ -2,6 +2,7 @@ package com.echo.automation;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,16 +10,22 @@ import java.util.Map;
  * This class uses recursion to find old test files without complex path resolution.
  */
 public class TestFileFinder {
-    
+
     // Cache of file locations to avoid repeated file system lookups
     private static final Map<String, File> fileCache = new HashMap<>();
-    
-    // Base directory for test resources
-    private static final String TEST_RESOURCES_DIR = "redo/src/test/resources/testRosters";
-    
+
+    // Candidate roots for test resources, in priority order. Covers running from
+    // the core module dir, the repo root, and from a sibling module (e.g.
+    // happycamper-desktop) where core's tests live one level up.
+    private static final List<String> TEST_RESOURCES_DIRS = List.of(
+            "src/test/resources/testRosters",
+            "happycamper-core/src/test/resources/testRosters",
+            "../happycamper-core/src/test/resources/testRosters"
+    );
+
     /**
      * Find a file by its name in the test resources directory.
-     * 
+     *
      * @param fileName The name of the file to find
      * @return The File object if found, or null if not found
      */
@@ -27,25 +34,15 @@ public class TestFileFinder {
         if (fileCache.containsKey(fileName)) {
             return fileCache.get(fileName);
         }
-        
-        // Search in the test resources directory
-        File file = findFileInDirectory(new File(TEST_RESOURCES_DIR), fileName);
-        
-        if (file != null) {
-            // Cache the result
-            fileCache.put(fileName, file);
-            return file;
+
+        for (String root : TEST_RESOURCES_DIRS) {
+            File file = findFileInDirectory(new File(root), fileName);
+            if (file != null) {
+                fileCache.put(fileName, file);
+                return file;
+            }
         }
-        
-        // If not found, try without the "redo/" prefix
-        file = findFileInDirectory(new File("src/test/resources/testRosters"), fileName);
-        
-        if (file != null) {
-            // Cache the result
-            fileCache.put(fileName, file);
-            return file;
-        }
-        
+
         return null;
     }
     
