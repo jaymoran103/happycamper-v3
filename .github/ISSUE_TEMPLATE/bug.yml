@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a defect or unexpected behavior in HappyCamper
+title: "bug: "
+labels:
+  - "type:bug"
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which module or layer is affected?
+      options:
+        - core
+        - desktop
+        - web
+        - all
+        - infra
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps that reliably produce the bug. Include input files (or links to fixtures) when relevant.
+      placeholder: |
+        1. Launch the desktop app
+        2. Import roster X and activity roster Y
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: Expected vs actual
+      description: What you expected to happen, and what actually happened. Stack traces / log snippets welcome in fenced code blocks.
+      placeholder: |
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Module version / git SHA
+      description: Output of `git rev-parse --short HEAD` or the artifact version, if known.
+      placeholder: e.g. 2.2 (fa3ff2e)
+    validations:
+      required: false
