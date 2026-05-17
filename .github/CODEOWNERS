@@ -1,0 +1,4 @@
+# CODEOWNERS — single owner today. Expand with module-scoped lines
+# (e.g. `happycamper-web/ @collaborator`) if/when collaborators join.
+
+* @jaymoran103
