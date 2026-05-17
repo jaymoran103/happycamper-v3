@@ -1,6 +1,7 @@
 package com.echo.service;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.List;
 
 import com.echo.domain.ActivityRoster;
@@ -73,79 +74,11 @@ public class RosterService {
      * @return A new EnhancedRoster with all features applied, or null if a critical error occurred
      */
     public EnhancedRoster createEnhancedRoster(File camperFile, File activityFile, List<String> enabledFeatureIds){
-
-        //Create a new WarningManager. doesn't need to be cleared if a new one is created for each process
         warningManager = new WarningManager();
-
         try {
-            // Import tosters (with basic validation)
             CamperRoster camperRoster = importService.importCamperRoster(camperFile);
             ActivityRoster activityRoster = importService.importActivityRoster(activityFile);
-
-            // Standardize program names
-            camperRoster.normalizePrograms();
-
-            // Validate rosters
-            camperRoster.validate(warningManager);
-            activityRoster.validate(warningManager);
-
-            // Create enhanced roster, add camper headers and data.
-            EnhancedRoster enhancedRoster = new EnhancedRoster();
-            for (String header : camperRoster.getHeaderMap().keySet()) {
-                enhancedRoster.addHeader(header);
-            }
-
-            // Copy camper data
-            for (Camper camper : camperRoster.getCampers()) {
-                enhancedRoster.addCamper(camper);
-            }
-
-            // Apply each enabled feature via a single EnhancementContext, which carries
-            // the activity roster for features that need it (ActivityFeature) and is
-            // ignored by features that don't.
-            EnhancementContext context = new EnhancementContext(enhancedRoster, activityRoster, warningManager);
-
-            for (String featureId : enabledFeatureIds) {
-                FeatureRegistration registration = featureRegistry.find(featureId).orElse(null);
-                if (registration == null) {
-                    continue;
-                }
-                RosterFeature feature = registration.feature();
-
-                // Prevalidate feature, skipping (or aborting) on failure.
-                // Always-enabled features (like ActivityFeature) are prerequisites for the rest of the pipeline, 
-                // so their failure aborts the whole import.
-                boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
-                if (!preValidated) {
-                    if (registration.alwaysEnabled()) {
-                        return null;
-                    }
-                    continue;
-                }
-
-                try {
-                    feature.applyFeature(context);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
-                }
-
-                // Post-validation: if the feature left the roster in an invalid state,
-                // scrap the whole process.
-                boolean postValidated = feature.postValidate(enhancedRoster, warningManager);
-                if (!postValidated) {
-                    return null;
-                }
-            }
-
-            // Sort headers by order once they're all added for consistent display
-            // RosterHeader.updateHeaderMapOrder ensures headers appear in a logical order
-            // regardless of the order in which features were applied
-            RosterHeader.updateHeaderMapOrder(enhancedRoster.getHeaderMap());
-
-
-
-            return enhancedRoster;
+            return applyFeaturesAndFinalize(camperRoster, activityRoster, enabledFeatureIds);
         }
         catch (RosterException e){
             warningManager.logError(e);
@@ -156,6 +89,83 @@ public class RosterService {
             warningManager.logError(exceptionWrapper);
             return null;
         }
+    }
+
+    /**
+     * Stream-based overload used by the web layer. Accepts the camper and activity CSVs
+     * as input streams (typically {@code MultipartFile.getInputStream()}) and runs the
+     * same feature pipeline as the File-based path. {@code sourceName} arguments are
+     * used only for error messages.
+     */
+    public EnhancedRoster createEnhancedRoster(InputStream camperStream, String camperSourceName,
+                                               InputStream activityStream, String activitySourceName,
+                                               List<String> enabledFeatureIds) {
+        warningManager = new WarningManager();
+        try {
+            CamperRoster camperRoster = importService.importCamperRoster(camperStream, camperSourceName);
+            ActivityRoster activityRoster = importService.importActivityRoster(activityStream, activitySourceName);
+            return applyFeaturesAndFinalize(camperRoster, activityRoster, enabledFeatureIds);
+        }
+        catch (RosterException e){
+            warningManager.logError(e);
+            return null;
+        }
+        catch (Exception e) {
+            RosterException exceptionWrapper = RosterException.create_normalWrapper("An error occurred while merging rosters: " + e.getMessage(), e);
+            warningManager.logError(exceptionWrapper);
+            return null;
+        }
+    }
+
+    /**
+     * Runs the feature pipeline against already-imported rosters. Shared by the File-based
+     * and stream-based public entry points so the orchestration logic lives in one place.
+     *
+     * @return the enhanced roster, or {@code null} if a prerequisite feature or post-validation
+     *         failed (the caller's WarningManager will hold details).
+     */
+    private EnhancedRoster applyFeaturesAndFinalize(CamperRoster camperRoster, ActivityRoster activityRoster,
+                                                    List<String> enabledFeatureIds) throws RosterException {
+        camperRoster.normalizePrograms();
+        camperRoster.validate(warningManager);
+        activityRoster.validate(warningManager);
+
+        EnhancedRoster enhancedRoster = new EnhancedRoster();
+        for (String header : camperRoster.getHeaderMap().keySet()) {
+            enhancedRoster.addHeader(header);
+        }
+        for (Camper camper : camperRoster.getCampers()) {
+            enhancedRoster.addCamper(camper);
+        }
+
+        EnhancementContext context = new EnhancementContext(enhancedRoster, activityRoster, warningManager);
+
+        for (String featureId : enabledFeatureIds) {
+            FeatureRegistration registration = featureRegistry.find(featureId).orElse(null);
+            if (registration == null) {
+                continue;
+            }
+            RosterFeature feature = registration.feature();
+
+            // Always-enabled features (e.g., ActivityFeature) are prerequisites; their failure
+            // aborts the whole import. Optional features are skipped on prevalidation failure.
+            boolean preValidated = feature.preValidate(enhancedRoster, warningManager);
+            if (!preValidated) {
+                if (registration.alwaysEnabled()) {
+                    return null;
+                }
+                continue;
+            }
+
+            feature.applyFeature(context);
+
+            if (!feature.postValidate(enhancedRoster, warningManager)) {
+                return null;
+            }
+        }
+
+        RosterHeader.updateHeaderMapOrder(enhancedRoster.getHeaderMap());
+        return enhancedRoster;
     }
 
     /**

@@ -20,10 +20,19 @@
         <maven.compiler.release>22</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.jupiter.version>5.10.1</junit.jupiter.version>
+        <spring.boot.version>3.3.5</spring.boot.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Boot BOM (used by happycamper-web) -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- JUnit 5 BOM-style pinning -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
