@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a new feature or enhancement
+title: "feat: "
+labels:
+  - "type:feat"
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which module or layer would this feature live in?
+      options:
+        - core
+        - desktop
+        - web
+        - all
+        - infra
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User story
+      description: Who is this for and what outcome are they trying to achieve?
+      placeholder: As a <role>, I want <capability> so that <outcome>.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, testable conditions that determine when this feature is done. Bullet list preferred.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
