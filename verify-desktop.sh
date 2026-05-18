@@ -83,7 +83,11 @@ fi
 if [[ "$RUN_JAR" == true ]]; then
   if [[ -n "$PRESET" ]]; then
     echo "[3/3] Launching desktop via preset '$PRESET' (mvn exec:java, test classpath)..."
-    mvn -pl happycamper-desktop -am test-compile -q
+    # exec:java resolves the sibling core module's main + tests jars through the local
+    # Maven repo. Install core (and `-am` the parent pom so the dependencyManagement
+    # chain resolves) before exec, otherwise we either get a stale jar from a prior
+    # build or an "invalid POM" warning that silently drops transitive deps.
+    mvn -pl happycamper-core -am install -DskipTests -q
     mvn -pl happycamper-desktop exec:java -Dhappycamper.preset="$PRESET"
   else
     echo "[3/3] Launching desktop JAR (no preset)..."

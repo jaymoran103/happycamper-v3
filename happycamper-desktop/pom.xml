@@ -28,13 +28,22 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Core test utilities (ReflectionUtils, automation/*) -->
+        <!-- Core test utilities (ReflectionUtils, automation/*, preset loader) -->
         <dependency>
             <groupId>com.echo</groupId>
             <artifactId>happycamper-core</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- SnakeYAML: test-scope deps don't transit through test-jar deps,
+             so PresetLoader (which lives in the core tests jar) needs YAML
+             declared explicitly here too for exec:java to resolve it. -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -108,10 +117,10 @@
                 </executions>
             </plugin>
             <!-- Preset-driven launches via `mvn exec:java -Dhappycamper.preset=<name>`.
-                 classpathScope=test pulls in test-scope deps and this module's test-classes;
-                 additionalClasspathElements explicitly adds the sibling core module's
-                 test-classes + test-resources (where PresetLoader and presets/*.yaml live),
-                 since the core test-jar is not installed to the local repo on a bare `verify`. -->
+                 classpathScope=test pulls in test-scope deps + this module's compile and
+                 test-classes. Resolution of the sibling core module's main + tests jars
+                 goes through the local Maven repo, so the caller must `mvn install` core
+                 first; verify-desktop.sh -p does this transparently. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -119,9 +128,6 @@
                     <mainClass>com.echo.HappyCamperPresetLauncher</mainClass>
                     <classpathScope>test</classpathScope>
                     <includePluginDependencies>false</includePluginDependencies>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>${project.basedir}/../happycamper-core/target/test-classes</additionalClasspathElement>
-                    </additionalClasspathElements>
                 </configuration>
             </plugin>
         </plugins>

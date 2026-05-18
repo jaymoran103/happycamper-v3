@@ -35,15 +35,16 @@ Land agentic infrastructure on desktop, then ship the parked Phase 4 work as a w
 - [x] Add minimal CODEOWNERS
 - [x] Cleanup pass: deleted `appmod/java-upgrade-20260506153848` + `phase-1/2/3` branches (local + remote) + three stale stashes. Retro at `-PLANNING/sprint-1/phase-0-rescue-setup/retro.md`.
 
-### Phase 1 — Desktop test wiring + presets *(largest engineering phase)*
+### Phase 1 — Desktop test wiring + presets *(complete — landed 2026-05-17 on `phase-1-test-wiring-presets`)*
 
-- Surefire/Failsafe split: `*Test.java` → unit, `*IT.java` → integration
-- Preset abstraction (location TBD in planning — core vs desktop). Loadable via `-Dhappycamper.preset=<name>` from `presets/` resources
-- Compose with (or cleanly supersede) the existing `automation/*` test utilities — do not duplicate
-- Migrate `verify-desktop.sh` flows to preset-driven launches; keep the script as a thin wrapper
-- Ship 1–2 reference presets that double as e2e fixtures (e.g. `demo-small`, `bug-repro-template`)
-
-**Planning tools:** plan mode + Plan subagent (this phase warrants both).
+- [x] Surefire/Failsafe split: `*Test.java` → unit (Surefire), `*IT.java` → integration (Failsafe). Both run on `mvn verify`.
+- [x] Preset abstraction in `com.echo.preset` (core test-jar). Loadable via `-Dhappycamper.preset=<name>` from `happycamper-core/src/test/resources/presets/`. CLI hook in desktop test sources (`HappyCamperPresetLauncher`) keeps production fat-jar clean — see `docs/decisions/001-preset-loader-location.md`.
+- [x] Composes with `automation/*`: `TestPresetAdapter` bridges the legacy `TestPreset` enum to the new `Preset` interface; the 93 existing enum references are untouched.
+- [x] `verify-desktop.sh` gains `-p|--preset <name>`; default flows (`-t`, `-j`, no-arg) unchanged. Parallel `mvn exec:java -Dhappycamper.preset=<name>` target for CI parity.
+- [x] Reference presets shipped: `demo-small.yaml`, `bug-repro-template.yaml`.
+- [x] Incidental: `TestFileFinder.TEST_RESOURCES_DIR` cleaned up (dead `redo/` path removed).
+- [x] ADR-001 written.
+- [x] Retro at `-PLANNING/sprint-1/phase-1-test-wiring-presets/retro.md`.
 
 ### Phase 2 — CI for desktop + core *(templatable)*
 
