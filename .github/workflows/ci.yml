@@ -84,7 +84,10 @@ jobs:
             m2-${{ runner.os }}-
 
       - name: Build & verify (${{ matrix.module }})
-        run: mvn -pl happycamper-core,happycamper-${{ matrix.module }} -am -B -ntp verify
+        # xvfb-run gives Swing tests a virtual X11 display; without it the desktop
+        # module's dialog tests throw HeadlessException on Linux runners. Harmless
+        # for modules that don't touch AWT (the future web slot just ignores it).
+        run: xvfb-run -a mvn -pl happycamper-core,happycamper-${{ matrix.module }} -am -B -ntp verify
 
   ci-all-green:
     name: ci-all-green
