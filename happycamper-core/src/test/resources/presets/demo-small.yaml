@@ -7,5 +7,17 @@ features:
   - activity
   - program
   - preference
-# expectedOutputs intentionally omitted in Phase 1 — populated in Phase 3 when
-# assertion-driven presets land.
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+#
+# Note: preference is in the features list but its preValidate fails on this CSV
+# (no preferences column), so the feature never enables and no_unrequested_activities
+# is recorded as SKIPPED rather than PASSED.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: PASSED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: PASSED }
+    no_unrequested_activities:   { status: SKIPPED }
+    no_swim_conflicts:           { status: SKIPPED }

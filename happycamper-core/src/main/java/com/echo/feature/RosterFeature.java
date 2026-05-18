@@ -3,6 +3,7 @@ package com.echo.feature;
 import java.util.List;
 import java.util.Map;
 
+import com.echo.assertion.RosterAssertion;
 import com.echo.domain.EnhancedRoster;
 import com.echo.logging.WarningManager;
 
@@ -97,5 +98,19 @@ public interface RosterFeature {
      *         Non-fatal warnings should be logged but shouldn't cause this method to return false.
      */
     boolean postValidate(EnhancedRoster roster, WarningManager warningManager);
+
+    /**
+     * Read-only checks that run against the enhanced roster after this feature has been
+     * applied successfully. Each assertion verifies an invariant that depends on this
+     * feature's columns (e.g., {@code ROUND_COUNT == MAX_ROUNDS}).
+     *
+     * Default returns an empty list, so features that haven't declared assertions
+     * continue to work unchanged.
+     *
+     * @return the assertions owned by this feature; never {@code null}
+     */
+    default List<RosterAssertion> getAssertions() {
+        return List.of();
+    }
 
 }

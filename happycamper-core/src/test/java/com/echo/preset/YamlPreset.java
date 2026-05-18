@@ -1,8 +1,10 @@
 package com.echo.preset;
 
+import com.echo.assertion.AssertionResult;
 import com.echo.automation.TestFileFinder;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -109,12 +111,44 @@ public final class YamlPreset implements Preset {
             expected = new ExpectedOutputs(
                     intOrNull(e.get("expectedCamperCount")),
                     intOrNull(e.get("expectedWarningCount")),
-                    (List<String>) e.get("expectedAssertionStatuses"),
+                    parseExpectedAssertions(e.get("expectedAssertions")),
                     (Map<String, Integer>) e.get("expectedHeaderCounts")
             );
         }
 
         return new YamlPreset(name, description, camperFile, activityFile, session, features, expected);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, ExpectedAssertion> parseExpectedAssertions(Object raw) {
+        if (!(raw instanceof Map)) {
+            return null;
+        }
+        Map<String, Object> entries = (Map<String, Object>) raw;
+        Map<String, ExpectedAssertion> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : entries.entrySet()) {
+            String id = entry.getKey();
+            if (!(entry.getValue() instanceof Map)) {
+                throw new IllegalArgumentException(
+                        "expectedAssertions['" + id + "'] must be a map with at least a 'status' key");
+            }
+            Map<String, Object> fields = (Map<String, Object>) entry.getValue();
+            Object statusObj = fields.get("status");
+            if (statusObj == null) {
+                throw new IllegalArgumentException(
+                        "expectedAssertions['" + id + "'] is missing required 'status' field");
+            }
+            AssertionResult.Status status;
+            try {
+                status = AssertionResult.Status.valueOf(statusObj.toString().trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException(
+                        "expectedAssertions['" + id + "'].status '" + statusObj + "' is not PASSED, FAILED, or SKIPPED");
+            }
+            Integer failureCount = intOrNull(fields.get("failureCount"));
+            result.put(id, new ExpectedAssertion(status, failureCount));
+        }
+        return result;
     }
 
     private static String stringField(Map<String, Object> map, String key, boolean required) {

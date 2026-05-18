@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.echo.assertion.RosterAssertion;
+import com.echo.assertion.checks.AllCampersHaveMaxRoundsAssertion;
+import com.echo.assertion.checks.NoDuplicateRoundEntriesAssertion;
+import com.echo.assertion.checks.RoundCountsNumericAssertion;
 import com.echo.domain.ActivityRoster;
 import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
@@ -42,7 +46,7 @@ public class ActivityFeature implements RosterFeature {
     private static final String FEATURE_NAME = "Activity Assignments";
 
     /** Maximum number of rounds supported by the application */
-    static final int MAX_ROUNDS = 3;
+    public static final int MAX_ROUNDS = 3;
 
     /** Header for the count of rounds assigned to a camper */
     private static final String ROUNDS_ASSIGNED_HEADER = RosterHeader.ROUND_COUNT.standardName;
@@ -171,7 +175,14 @@ public class ActivityFeature implements RosterFeature {
         return true;
     }
 
-
+    @Override
+    public List<RosterAssertion> getAssertions() {
+        return List.of(
+                new AllCampersHaveMaxRoundsAssertion(),
+                new RoundCountsNumericAssertion(),
+                new NoDuplicateRoundEntriesAssertion()
+        );
+    }
 
 
     /**

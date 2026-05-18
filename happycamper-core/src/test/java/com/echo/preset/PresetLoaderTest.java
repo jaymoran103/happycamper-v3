@@ -7,7 +7,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,7 +24,9 @@ class PresetLoaderTest {
         assertNotNull(p.getActivityFile());
         assertTrue(p.getActivityFile().exists(), "activity file should resolve to an existing file");
         assertEquals(List.of("activity", "program", "preference"), List.of(p.getFeatures()));
-        assertNull(p.getExpectedOutputs(), "demo-small omits expectedOutputs");
+        assertNotNull(p.getExpectedOutputs(), "demo-small declares expectedOutputs since Phase 3");
+        assertNotNull(p.getExpectedOutputs().expectedAssertions(),
+                "demo-small declares expectedAssertions since Phase 3");
     }
 
     @Test

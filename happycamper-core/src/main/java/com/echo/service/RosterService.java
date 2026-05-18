@@ -3,6 +3,11 @@ package com.echo.service;
 import java.io.File;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.echo.assertion.AssertionReport;
+import com.echo.assertion.AssertionService;
 import com.echo.domain.ActivityRoster;
 import com.echo.domain.CampConfig;
 import com.echo.domain.Camper;
@@ -28,10 +33,15 @@ import com.echo.logging.WarningManager;
  * and the feature implementations.
  */
 public class RosterService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RosterService.class);
+
     private final ImportService importService;
     private final ExportService exportService;
     private final FeatureRegistry featureRegistry;
+    private final AssertionService assertionService;
     private WarningManager warningManager; // Created new for each processing operation
+    private AssertionReport assertionReport; // Populated at the end of a successful run
 
     /**
      * Creates a new RosterService backed by the default core feature registry.
@@ -49,6 +59,7 @@ public class RosterService {
         this.importService = importService;
         this.exportService = exportService;
         this.featureRegistry = featureRegistry;
+        this.assertionService = new AssertionService(featureRegistry);
     }
 
     /**
@@ -76,6 +87,7 @@ public class RosterService {
 
         //Create a new WarningManager. doesn't need to be cleared if a new one is created for each process
         warningManager = new WarningManager();
+        assertionReport = null;
 
         try {
             // Import tosters (with basic validation)
@@ -143,7 +155,14 @@ public class RosterService {
             // regardless of the order in which features were applied
             RosterHeader.updateHeaderMapOrder(enhancedRoster.getHeaderMap());
 
-
+            // Run assertions against the finalized roster. The report is informational in
+            // Phase 3 — see docs/decisions/002-assertion-architecture.md.
+            assertionReport = assertionService.runAssertions(enhancedRoster);
+            LOG.info("Assertions: total={} passed={} failed={} skipped={}",
+                    assertionReport.totalCount(),
+                    assertionReport.passedCount(),
+                    assertionReport.failedCount(),
+                    assertionReport.skippedCount());
 
             return enhancedRoster;
         }
@@ -188,6 +207,21 @@ public class RosterService {
             throw new IllegalStateException("Warning manager is null. New instance should be created whenever a service starts.");
         }
         return warningManager;
+    }
+
+    /**
+     * Gets the assertion report from the most recent successful enhancement run.
+     *
+     * @return the report produced by the last successful {@code createEnhancedRoster} call
+     * @throws IllegalStateException if no successful run has completed yet (either
+     *         {@code createEnhancedRoster} was never called, or the last call aborted early)
+     */
+    public AssertionReport getAssertionReport() {
+        if (assertionReport == null) {
+            throw new IllegalStateException(
+                    "Assertion report is null. Call createEnhancedRoster successfully first.");
+        }
+        return assertionReport;
     }
 
     /**

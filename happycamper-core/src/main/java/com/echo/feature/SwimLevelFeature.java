@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.echo.assertion.RosterAssertion;
+import com.echo.assertion.checks.NoSwimConflictsAssertion;
 import com.echo.domain.Camper;
 import com.echo.domain.DataConstants;
 import com.echo.domain.EnhancedRoster;
@@ -194,6 +196,11 @@ public class SwimLevelFeature implements RosterFeature {
     @Override
     public boolean postValidate(EnhancedRoster roster, WarningManager warningManager) {
         return true;
+    }
+
+    @Override
+    public List<RosterAssertion> getAssertions() {
+        return List.of(new NoSwimConflictsAssertion());
     }
 
 
