@@ -3,6 +3,9 @@ package com.echo.assertion;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.echo.domain.EnhancedRoster;
 import com.echo.feature.FeatureRegistration;
 import com.echo.feature.FeatureRegistry;
@@ -25,6 +28,7 @@ import com.echo.feature.RosterFeature;
  */
 public class AssertionService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AssertionService.class);
     private static final String SKIPPED_REASON = "Feature not enabled.";
 
     private final FeatureRegistry featureRegistry;
@@ -39,14 +43,18 @@ public class AssertionService {
             RosterFeature feature = registration.feature();
             boolean enabled = roster.hasFeature(feature.getFeatureId());
             for (RosterAssertion assertion : feature.getAssertions()) {
-                if (enabled) {
-                    results.add(evaluateSafely(assertion, roster));
-                } else {
-                    results.add(AssertionResult.skipped(
-                            assertion.getAssertionId(),
-                            assertion.getAssertionName(),
-                            SKIPPED_REASON));
-                }
+                AssertionResult result = enabled
+                        ? evaluateSafely(assertion, roster)
+                        : AssertionResult.skipped(
+                                assertion.getAssertionId(),
+                                assertion.getAssertionName(),
+                                SKIPPED_REASON);
+                LOG.info("Assertion {}: status={} failureCount={} summary={}",
+                        result.getAssertionId(),
+                        result.getStatus(),
+                        result.getFailureCount(),
+                        result.getSummary());
+                results.add(result);
             }
         }
         return new AssertionReport(results);
