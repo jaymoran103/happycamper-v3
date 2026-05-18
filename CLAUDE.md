@@ -73,10 +73,11 @@ Note: `README.md` references `cd redo` and a `roster-manager-…` artifact name 
 
 ## Test conventions
 
-- Surefire picks up `**/*Test.java` (configured in the parent pom). All current tests are `*Test.java`.
-- ROADMAP.md Phase 1 plans a Surefire/Failsafe split where `*Test.java` stays unit and `*IT.java` becomes integration. Not yet implemented — when adding tests now, use `*Test.java`.
+- **Unit tests:** `**/*Test.java` → Surefire (runs in the `test` phase). Fast, no I/O beyond `@TempDir`, no external processes.
+- **Integration tests:** `**/*IT.java` → Failsafe (runs in `integration-test` + `verify` phases). May spawn the desktop app, hit the filesystem with preset fixtures, or assert end-to-end pipeline behavior.
+- Both phases run on `mvn verify`. `mvn test` runs Surefire only. Failing an `*IT.java` does not halt the build until the `verify` goal (intentional — gives Surefire results first).
 - Test fixtures live in `happycamper-core/src/test/resources/testRosters/` (mini, demo, basic, merged, newTests subdirs). The `com.echo.automation.*` package (`TestFiles`, `TestFileFinder`, `TestPreset`) provides typed handles to these files and is published in the core test-jar for reuse by desktop tests.
-- `TestFileFinder.TEST_RESOURCES_DIR` is hardcoded to `redo/src/test/resources/testRosters` — a pre-module-split path. If you touch that finder, verify it still resolves correctly under the current layout.
+- **Preset abstraction:** YAML manifests under `happycamper-core/src/test/resources/presets/` describe reusable scenarios (camper CSV + activity CSV + session + feature toggles + optional expected outputs). Load via `com.echo.preset.PresetLoader.load("name")` or launch the desktop app with one via `-Dhappycamper.preset=<name>` through the test-scope `HappyCamperPresetLauncher` (Maven: `mvn -pl happycamper-desktop exec:java -Dhappycamper.preset=<name>`; shell wrapper: `./verify-desktop.sh -j -p <name>`). The legacy `TestPreset` enum continues to back `@EnumSource(TestPreset.class)` tests; `TestPresetAdapter` bridges it to the new `Preset` interface when needed.
 
 ## Operating rules
 
