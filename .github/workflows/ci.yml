@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: detect-changes
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.compute.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            core:
+              - 'happycamper-core/**'
+              - 'pom.xml'
+              - '.github/workflows/**'
+            desktop:
+              - 'happycamper-desktop/**'
+            # web:
+            #   - 'happycamper-web/**'
+
+      - id: compute
+        name: Compute affected module matrix
+        env:
+          CORE_CHANGED: ${{ steps.filter.outputs.core }}
+          DESKTOP_CHANGED: ${{ steps.filter.outputs.desktop }}
+          # WEB_CHANGED: ${{ steps.filter.outputs.web }}
+        run: |
+          set -euo pipefail
+          if [[ "$CORE_CHANGED" == "true" ]]; then
+            # Core or root pom changed: run the full active matrix.
+            modules='["desktop"]'
+            # When web rejoins, swap the line above for:
+            # modules='["desktop","web"]'
+          else
+            mods=()
+            [[ "$DESKTOP_CHANGED" == "true" ]] && mods+=('"desktop"')
+            # [[ "$WEB_CHANGED" == "true" ]] && mods+=('"web"')
+            if [[ ${#mods[@]} -eq 0 ]]; then
+              modules='[]'
+            else
+              IFS=,
+              modules="[${mods[*]}]"
+            fi
+          fi
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+          echo "Affected modules: $modules"
+
+  build:
+    name: build (${{ matrix.module }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.modules != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.detect-changes.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-
+
+      - name: Build & verify (${{ matrix.module }})
+        # xvfb-run gives Swing tests a virtual X11 display; without it the desktop
+        # module's dialog tests throw HeadlessException on Linux runners. Harmless
+        # for modules that don't touch AWT (the future web slot just ignores it).
+        run: xvfb-run -a mvn -pl happycamper-core,happycamper-${{ matrix.module }} -am -B -ntp verify
+
+  ci-all-green:
+    name: ci-all-green
+    needs: [detect-changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert all required jobs succeeded
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          DETECT_RESULT: ${{ needs.detect-changes.result }}
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "detect-changes did not succeed: $DETECT_RESULT"
+            exit 1
+          fi
+          # 'skipped' is success here (no affected modules -> nothing to build).
+          if [[ "$BUILD_RESULT" == "success" || "$BUILD_RESULT" == "skipped" ]]; then
+            echo "CI all-green."
+          else
+            echo "build job result: $BUILD_RESULT"
+            exit 1
+          fi
