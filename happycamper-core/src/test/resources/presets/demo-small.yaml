@@ -1,0 +1,11 @@
+name: demo-small
+description: Small authentic-data scenario for smoke testing the desktop app.
+camperFile: demoRosters/Campers_S6_demo.csv
+activityFile: demoRosters/Activities_S6_demo.csv
+session: 6
+features:
+  - activity
+  - program
+  - preference
+# expectedOutputs intentionally omitted in Phase 1 — populated in Phase 3 when
+# assertion-driven presets land.

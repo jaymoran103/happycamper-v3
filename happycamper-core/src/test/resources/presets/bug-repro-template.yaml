@@ -1,0 +1,13 @@
+name: bug-repro-template
+description: >
+  Copy-paste template for bug reproductions. Points at the smallest valid roster
+  so the app launches instantly and the bug is the only variable. Fork this file
+  per bug, rename to e.g. bug-IT-1234.yaml, swap CSV paths as needed.
+camperFile: miniRosters/miniCampers.csv
+activityFile: miniRosters/miniActivities.csv
+session: 1
+features: []
+# Example assertion block — uncomment and populate when filing a real bug.
+# expectedOutputs:
+#   expectedCamperCount: 3
+#   expectedWarningCount: 0
