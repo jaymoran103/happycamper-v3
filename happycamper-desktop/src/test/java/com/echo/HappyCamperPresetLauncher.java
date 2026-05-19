@@ -1,5 +1,9 @@
 package com.echo;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.concurrent.CountDownLatch;
+
 import com.echo.automation.TestFileFinder;
 import com.echo.preset.Preset;
 import com.echo.preset.PresetLoader;
@@ -37,6 +41,25 @@ public final class HappyCamperPresetLauncher {
         Preset preset = PresetLoader.load(presetName);
         printPresetInfo(preset);
         HappyCamper.mainTest(preset.getCamperFile(), preset.getActivityFile(), preset.getFeatures());
+
+        // Under `mvn exec:java`, Maven exits the JVM as soon as main returns — even
+        // with cleanupDaemonThreads=false — which tears the Swing window down before
+        // the user can interact with it. Block here until the window is closed so
+        // the launch behaves like a real desktop run.
+        blockUntilWindowClosed();
+    }
+
+    private static void blockUntilWindowClosed() {
+        CountDownLatch latch = new CountDownLatch(1);
+        HappyCamper.accessSingleWindow().addWindowListener(new WindowAdapter() {
+            @Override public void windowClosed(WindowEvent e) { latch.countDown(); }
+            @Override public void windowClosing(WindowEvent e) { latch.countDown(); }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void printPresetInfo(Preset p) {

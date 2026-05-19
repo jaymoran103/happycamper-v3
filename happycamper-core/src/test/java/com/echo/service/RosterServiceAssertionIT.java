@@ -2,6 +2,7 @@ package com.echo.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -37,6 +40,15 @@ import com.echo.preset.PresetLoader;
  * outcomes back into the YAML.
  */
 class RosterServiceAssertionIT {
+
+    private record CaseResult(String name, String yamlPath, boolean passed, List<String> mismatches) {}
+
+    private static final List<CaseResult> CASE_RESULTS = new ArrayList<>();
+
+    @BeforeAll
+    static void resetCaseResults() {
+        CASE_RESULTS.clear();
+    }
 
     static Stream<Preset> presetsWithExpectations() {
         List<Preset> out = new ArrayList<>();
@@ -97,19 +109,58 @@ class RosterServiceAssertionIT {
             }
         }
 
+        String presetPath = "happycamper-core/src/test/resources/presets/" + preset.getName() + ".yaml";
+
         // Surface unexpected extra results too — a YAML that omits an assertion id is
         // declaring "I don't care about this one." But during fixture authoring it's
         // useful to see everything the report produced.
         if (!mismatches.isEmpty()) {
-            fail("[" + preset.getName() + "] expectation mismatch:\n"
+            CASE_RESULTS.add(new CaseResult(preset.getName(), presetPath, false, List.copyOf(mismatches)));
+            fail("[" + preset.getName() + "] expectation mismatch (" + presetPath + "):\n"
                     + String.join("\n", mismatches)
                     + "\n\nFull report:\n" + dump(report));
         }
+        CASE_RESULTS.add(new CaseResult(preset.getName(), presetPath, true, List.of()));
 
         // Sanity: the report should cover every assertion the user pinned (no typos in ids).
         assertEquals(Collections.emptyList(),
                 expected.keySet().stream().filter(id -> !actualById.containsKey(id)).toList(),
                 "Preset references assertion ids that the service did not produce");
+    }
+
+    /**
+     * Prints a compact roll-up of every preset case to stdout after all parameterized
+     * invocations have run. Goal: when one or more presets contradict their YAML, the
+     * reader can scroll to the bottom of the IT output and immediately see which
+     * fixtures failed and which line of YAML to edit, without scanning each per-case
+     * dump for the {@code [preset-name]} prefix.
+     */
+    @AfterAll
+    static void printSummary() {
+        if (CASE_RESULTS.isEmpty()) return;
+
+        List<CaseResult> sorted = CASE_RESULTS.stream()
+                .sorted(Comparator.comparing(CaseResult::passed)         // FAIL (false) before PASS (true)
+                                  .thenComparing(CaseResult::name))
+                .toList();
+        long failed = sorted.stream().filter(r -> !r.passed()).count();
+
+        StringBuilder sb = new StringBuilder();
+        String header = "=== Preset assertion results (" + sorted.size() + " total, " + failed + " failed) ===";
+        sb.append('\n').append(header).append('\n');
+        for (CaseResult r : sorted) {
+            if (r.passed()) {
+                sb.append("  PASS  ").append(r.name()).append('\n');
+            } else {
+                sb.append("  FAIL  ").append(r.name())
+                  .append("    ").append(r.yamlPath()).append('\n');
+                for (String m : r.mismatches()) {
+                    sb.append("        ").append(m).append('\n');
+                }
+            }
+        }
+        sb.append("=".repeat(header.length())).append('\n');
+        System.out.println(sb);
     }
 
     private static String dump(AssertionReport report) {

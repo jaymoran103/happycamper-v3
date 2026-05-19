@@ -1,0 +1,18 @@
+name: basic-swimcolors
+description: Single-cabin roster with swim level colors. Mirrors BASIC_SWIMCOLORS but also enables activity so the ActivityFeature assertions run alongside no_swim_conflicts.
+camperFile: basicRosters/singleCabinCampers_swimColors.csv
+activityFile: basicRosters/singleCabinActivities.csv
+session: 6
+features:
+  - activity
+  - swimlevel
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: FAILED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: FAILED }
+    no_unrequested_activities:   { status: SKIPPED }
+    no_swim_conflicts:           { status: FAILED }

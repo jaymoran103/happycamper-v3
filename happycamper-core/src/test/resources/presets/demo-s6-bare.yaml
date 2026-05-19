@@ -1,0 +1,17 @@
+name: demo-s6-bare
+description: Authentic Session 6 roster (no preferences column). Activity feature only — mirrors NEW_S6_TEST but with activity enabled so the ActivityFeature assertions actually run.
+camperFile: demoRosters/Campers_S6_demo.csv
+activityFile: demoRosters/Activities_S6_demo.csv
+session: 6
+features:
+  - activity
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: PASSED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: PASSED }
+    no_unrequested_activities:   { status: SKIPPED }
+    no_swim_conflicts:           { status: SKIPPED }

@@ -1,0 +1,19 @@
+name: basic-preferences-medical
+description: Single-cabin roster with preferences and medical columns. Enables both features (legacy BASIC_PREFERENCES_MEDICAL had none) so the data is actually exercised. Note the upstream filename typo (mediical).
+camperFile: basicRosters/singleCabinCampers_preferences_mediical.csv
+activityFile: basicRosters/singleCabinActivities.csv
+session: 6
+features:
+  - activity
+  - preference
+  - medical
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: FAILED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: FAILED }
+    no_unrequested_activities:   { status: FAILED }
+    no_swim_conflicts:           { status: SKIPPED }

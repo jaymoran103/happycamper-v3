@@ -53,6 +53,12 @@ public final class YamlPreset implements Preset {
     @Override public String[] getFeatures() { return features; }
     @Override public ExpectedOutputs getExpectedOutputs() { return expectedOutputs; }
 
+    /** Used by {@code @ParameterizedTest(name = "{0}")} so IDE test runners and
+     *  JUnit display names show the preset id instead of {@code YamlPreset@hash}.
+     *  (Failsafe's XML still uses positional indices unless its statelessTestsetReporter
+     *  is configured for phrased names.) */
+    @Override public String toString() { return name; }
+
     @Override
     public File getCamperFile() {
         return resolve(camperFilePath, "camperFile");

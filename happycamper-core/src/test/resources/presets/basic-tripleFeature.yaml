@@ -1,0 +1,20 @@
+name: basic-tripleFeature
+description: Single cabin roster, all features enabled but each validation should fail
+camperFile: basicRosters/singleCabinCampers_tripleFeature.csv
+activityFile: demoRosters/singleCabinActivities.csv
+session: 6
+features:
+  - activity
+  - program
+  - preference
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: FAILED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: FAILED }
+    no_unrequested_activities:   { status: FAILED }
+    no_swim_conflicts:           { status: SKIPPED }
