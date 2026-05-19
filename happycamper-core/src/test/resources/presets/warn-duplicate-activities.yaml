@@ -1,0 +1,21 @@
+name: warn-duplicate-activities
+description: Mini campers with an activities CSV that contains duplicate activity assignments. Exercises the DUPLICATE_ACTIVITY warning path in ActivityFeature; the IT pins only the assertion outcomes (which may include FAILED on no_duplicate_round_entries).
+camperFile: miniRosters/miniCampers.csv
+activityFile: miniRosters/miniActivitiesFull_DuplicateActivities.csv
+session: 1
+features:
+  - activity
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+# Note: despite the fixture's name (DuplicateActivities), the duplicates upstream
+# don't surface as duplicate round assignments — likely deduplicated during import.
+# The preset still exercises the duplicate-handling path; no_duplicate_round_entries
+# passing here is the actual observed behavior, not a regression to celebrate.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: PASSED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: PASSED }
+    no_unrequested_activities:   { status: SKIPPED }
+    no_swim_conflicts:           { status: SKIPPED }

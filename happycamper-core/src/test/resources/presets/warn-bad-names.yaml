@@ -1,0 +1,17 @@
+name: warn-bad-names
+description: Single-cabin roster with malformed camper name fields. Exercises name-format validation warnings; the IT pins only the assertion outcomes.
+camperFile: basicRosters/singleCabinCampers_badNames.csv
+activityFile: basicRosters/singleCabinActivities.csv
+session: 1
+features:
+  - activity
+# expectedAssertions reflect the actual outputs of the assertion pipeline against
+# these CSVs. If a future PR edits either CSV or the feature list, the IT will
+# trip — update both the CSV and these expectations together.
+expectedOutputs:
+  expectedAssertions:
+    all_campers_have_max_rounds: { status: FAILED }
+    round_counts_numeric:        { status: PASSED }
+    no_duplicate_round_entries:  { status: FAILED }
+    no_unrequested_activities:   { status: SKIPPED }
+    no_swim_conflicts:           { status: SKIPPED }
