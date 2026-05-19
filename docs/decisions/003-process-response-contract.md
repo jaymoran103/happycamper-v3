@@ -60,6 +60,7 @@ Asymmetric with the 422 shape on purpose. 400 covers pre-flight validation (miss
 |---|---|---|
 | `200 OK` | Pipeline ran end-to-end. May include FAILED assertions (informational per ADR-002). | `ProcessResponse` |
 | `400 Bad Request` | `camperFile` or `activityFile` is missing or empty; `IOException` reading the upload. | `{ "error": string }` |
+| `413 Payload Too Large` | A multipart file or the total request exceeds `spring.servlet.multipart.max-file-size` / `max-request-size` (today 10MB / 20MB). Translated from Spring's `MaxUploadSizeExceededException` by `ProcessController.handleUploadTooLarge`; otherwise Spring's default returns 500 with no body. | `{ "error": string }` |
 | `422 Unprocessable Entity` | Pipeline aborted: prereq feature `preValidate` failed (e.g., ActivityFeature) or a feature's `postValidate` failed. | `{ "errors": [{type, message}] }` |
 | `500 Internal Server Error` | Unhandled exception. Spring's default handler is fine; intentionally not a contract surface. | Spring default |
 
