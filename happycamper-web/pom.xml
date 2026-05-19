@@ -14,14 +14,35 @@
     <artifactId>happycamper-web</artifactId>
     <packaging>jar</packaging>
 
-    <!-- Phase 1: stub only. No source files or Spring Boot dependencies yet.
-         Spring Boot and web code added in Phase 4. -->
-
     <dependencies>
         <dependency>
             <groupId>com.echo</groupId>
             <artifactId>happycamper-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <configuration>
+                    <mainClass>com.echo.web.HappyCamperWebApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
