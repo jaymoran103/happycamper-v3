@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.echo</groupId>
         <artifactId>happy-camper-parent</artifactId>
-        <version>2.2</version>
+        <version>2.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>happycamper-web</artifactId>
