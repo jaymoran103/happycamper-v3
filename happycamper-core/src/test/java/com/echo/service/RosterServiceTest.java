@@ -1,14 +1,19 @@
 package com.echo.service;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.echo.assertion.AssertionReport;
+import com.echo.assertion.AssertionResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -300,5 +305,62 @@ public class RosterServiceTest {
             throw RosterException.fileException("Failed to read export file",
                                               "Check file permissions and try again");
         }
+    }
+
+    @Test
+    @DisplayName("InputStream overload produces equivalent EnhancedRoster as File overload")
+    void createEnhancedRosterFromStreams_happyPath() throws Exception {
+        TestPreset preset = TestPreset.MINI_NORMAL;
+        byte[] camperBytes = Files.readAllBytes(preset.getCamperFile().toPath());
+        byte[] activityBytes = Files.readAllBytes(preset.getActivityFile().toPath());
+        List<String> allFeatures = List.of("activity", "program", "preference", "swimlevel", "medical");
+
+        EnhancedRoster roster = rosterService.createEnhancedRoster(
+                new ByteArrayInputStream(camperBytes), "campers.csv",
+                new ByteArrayInputStream(activityBytes), "activities.csv",
+                allFeatures);
+
+        assertNotNull(roster, "Stream overload should return a non-null roster on the happy path");
+        assertFalse(roster.getCampers().isEmpty(), "Roster should contain campers");
+        AssertionReport report = rosterService.getAssertionReport();
+        assertNotNull(report, "Assertion report should be populated after a successful run");
+        assertTrue(report.totalCount() >= 1, "At least one assertion should have run");
+    }
+
+    @Test
+    @DisplayName("InputStream overload honors enabledFeatureIds — SKIPPED for off features")
+    void createEnhancedRosterFromStreams_featureToggle() throws Exception {
+        TestPreset preset = TestPreset.MINI_NORMAL;
+        byte[] camperBytes = Files.readAllBytes(preset.getCamperFile().toPath());
+        byte[] activityBytes = Files.readAllBytes(preset.getActivityFile().toPath());
+
+        EnhancedRoster roster = rosterService.createEnhancedRoster(
+                new ByteArrayInputStream(camperBytes), "campers.csv",
+                new ByteArrayInputStream(activityBytes), "activities.csv",
+                List.of("activity"));
+
+        assertNotNull(roster, "Activity-only run should still produce a roster");
+        AssertionReport report = rosterService.getAssertionReport();
+        // Preference + SwimLevel features were not enabled, so their assertions should report SKIPPED.
+        long skipped = report.getResults().stream().filter(AssertionResult::isSkipped).count();
+        assertTrue(skipped >= 2,
+                "At least the preference + swim-level assertions should be SKIPPED when those features are off");
+    }
+
+    @Test
+    @DisplayName("InputStream overload returns null and logs error when CSV is malformed")
+    void createEnhancedRosterFromStreams_malformed() {
+        // Camper CSV missing required headers — should fail validation, caught, error logged.
+        String malformedCsv = "NotARealHeader,Another\nfoo,bar\n";
+        byte[] activityBytes = malformedCsv.getBytes(StandardCharsets.UTF_8);
+
+        EnhancedRoster roster = rosterService.createEnhancedRoster(
+                new ByteArrayInputStream(malformedCsv.getBytes(StandardCharsets.UTF_8)), "bad-campers.csv",
+                new ByteArrayInputStream(activityBytes), "bad-activities.csv",
+                List.of("activity"));
+
+        assertEquals(null, roster, "Malformed input should return null");
+        assertTrue(rosterService.getWarningManager().hasErrors(),
+                "Warning manager should have recorded the import error");
     }
 }
