@@ -9,11 +9,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.echo.assertion.AssertionReport;
@@ -44,6 +48,8 @@ import com.echo.web.dto.ProcessResponse.WarningDto;
 @RestController
 public class ProcessController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessController.class);
+
     private final RosterService rosterService;
     private final ExportService exportService;
 
@@ -68,10 +74,18 @@ public class ProcessController {
             @RequestParam(value = "activityFile", required = false) MultipartFile activityFile,
             @RequestParam(value = "features", required = false) List<String> features) {
 
+        long startNanos = System.nanoTime();
+        LOG.info("POST /process camperFile={} ({} bytes) activityFile={} ({} bytes) features={}",
+                safeName(camperFile), sizeOrZero(camperFile),
+                safeName(activityFile), sizeOrZero(activityFile),
+                features == null ? "<all>" : features);
+
         if (camperFile == null || camperFile.isEmpty()) {
+            LOG.warn("POST /process 400 — camperFile is required ({}ms)", elapsedMs(startNanos));
             return badRequest("camperFile is required");
         }
         if (activityFile == null || activityFile.isEmpty()) {
+            LOG.warn("POST /process 400 — activityFile is required ({}ms)", elapsedMs(startNanos));
             return badRequest("activityFile is required");
         }
 
@@ -87,22 +101,43 @@ public class ProcessController {
                     enabledFeatureIds);
             warningManager = rosterService.getWarningManager();
         } catch (IOException e) {
+            LOG.warn("POST /process 400 — IO error reading upload ({}ms): {}", elapsedMs(startNanos), e.getMessage());
             return badRequest("Could not read uploaded file: " + e.getMessage());
         }
 
         if (enhancedRoster == null) {
+            List<ErrorDto> errors = mapErrors(warningManager);
+            LOG.warn("POST /process 422 — pipeline aborted with {} error(s) ({}ms)", errors.size(), elapsedMs(startNanos));
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(Map.of("errors", mapErrors(warningManager)));
+                    .body(Map.of("errors", errors));
         }
 
         String enrichedCsv = exportCsv(enhancedRoster);
         AssertionReport report = rosterService.getAssertionReport();
+        List<WarningDto> warnings = mapWarnings(warningManager);
+
+        LOG.info("POST /process 200 — assertions total={} passed={} failed={} skipped={} warnings={} ({}ms)",
+                report.totalCount(), report.passedCount(), report.failedCount(), report.skippedCount(),
+                warnings.size(), elapsedMs(startNanos));
 
         ProcessResponse response = new ProcessResponse(
                 AssertionReportDto.from(report),
                 enrichedCsv,
-                mapWarnings(warningManager));
+                warnings);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Translates Spring's {@link MaxUploadSizeExceededException} (thrown by the multipart parser
+     * when a file or request exceeds {@code spring.servlet.multipart.max-file-size} /
+     * {@code max-request-size}) into a 413 with the contract-shaped {@code {error: string}} body.
+     * Otherwise Spring's default handler returns a 500 with no body, which is misleading.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleUploadTooLarge(MaxUploadSizeExceededException e) {
+        LOG.warn("Multipart upload rejected: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Map.of("error", "Upload exceeds maximum allowed size: " + e.getMessage()));
     }
 
     /**
@@ -159,8 +194,17 @@ public class ProcessController {
     }
 
     private static String safeName(MultipartFile file) {
+        if (file == null) return "<missing>";
         String name = file.getOriginalFilename();
         return name != null && !name.isBlank() ? name : "upload.csv";
+    }
+
+    private static long sizeOrZero(MultipartFile file) {
+        return file == null ? 0L : file.getSize();
+    }
+
+    private static long elapsedMs(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000L;
     }
 
     private static ResponseEntity<Map<String, String>> badRequest(String message) {
