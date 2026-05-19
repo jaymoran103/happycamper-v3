@@ -101,7 +101,8 @@ class RosterServiceAssertionIT {
         // declaring "I don't care about this one." But during fixture authoring it's
         // useful to see everything the report produced.
         if (!mismatches.isEmpty()) {
-            fail("[" + preset.getName() + "] expectation mismatch:\n"
+            String presetPath = "happycamper-core/src/test/resources/presets/" + preset.getName() + ".yaml";
+            fail("[" + preset.getName() + "] expectation mismatch (" + presetPath + "):\n"
                     + String.join("\n", mismatches)
                     + "\n\nFull report:\n" + dump(report));
         }
