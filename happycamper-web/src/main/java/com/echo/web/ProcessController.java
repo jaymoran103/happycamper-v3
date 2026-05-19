@@ -64,8 +64,8 @@ public class ProcessController {
      */
     @PostMapping(path = "/process")
     public ResponseEntity<?> process(
-            @RequestParam("camperFile") MultipartFile camperFile,
-            @RequestParam("activityFile") MultipartFile activityFile,
+            @RequestParam(value = "camperFile", required = false) MultipartFile camperFile,
+            @RequestParam(value = "activityFile", required = false) MultipartFile activityFile,
             @RequestParam(value = "features", required = false) List<String> features) {
 
         if (camperFile == null || camperFile.isEmpty()) {

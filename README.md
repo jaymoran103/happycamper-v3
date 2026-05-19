@@ -84,19 +84,47 @@ HappyCamper follows a clean architecture pattern with clear separation of concer
 - Maven 3.6 or higher
 
 ### Building the Project
+Build all modules (core, desktop, web) from the repo root:
 ```bash
-cd redo
-mvn clean package
+mvn clean verify
 ```
 
-### Running the Application
+Or build a single module with its dependencies:
 ```bash
-java -jar target/roster-manager-2.2-SNAPSHOT.jar
+mvn -pl happycamper-desktop -am clean verify
 ```
 
-Or use the provided script:
+### Running the Desktop Application
 ```bash
-./run_app.sh
+java -jar happycamper-desktop/target/happycamper-desktop-2.3.0-SNAPSHOT.jar
+```
+
+Or use the convenience wrapper to package and launch in one step:
+```bash
+./full-verify-desktop.sh
+```
+
+### Running the Web Layer
+
+HappyCamper ships a Spring Boot service (`happycamper-web`) that exposes the same enhancement pipeline over HTTP. Run it from source:
+
+```bash
+mvn -pl happycamper-web -am spring-boot:run
+```
+
+The service listens on `http://localhost:8080` by default. Submit a camper roster + activity roster and get the enriched CSV plus the assertion report as JSON:
+
+```bash
+curl -F camperFile=@happycamper-web/src/test/resources/testCamperRoster.csv \
+     -F activityFile=@happycamper-web/src/test/resources/testActivityRoster.csv \
+     http://localhost:8080/process | jq '.assertions.summary'
+```
+
+Optional: pass `features=...` to enable a subset (omit to run every registered feature). The response contract is locked in `docs/decisions/003-process-response-contract.md`.
+
+Or run the packaged fat-jar (built by `mvn clean verify`):
+```bash
+java -jar happycamper-web/target/happycamper-web-2.3.0-SNAPSHOT.jar
 ```
 
 ## Usage
