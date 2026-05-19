@@ -29,26 +29,24 @@ jobs:
               - '.github/workflows/**'
             desktop:
               - 'happycamper-desktop/**'
-            # web:
-            #   - 'happycamper-web/**'
+            web:
+              - 'happycamper-web/**'
 
       - id: compute
         name: Compute affected module matrix
         env:
           CORE_CHANGED: ${{ steps.filter.outputs.core }}
           DESKTOP_CHANGED: ${{ steps.filter.outputs.desktop }}
-          # WEB_CHANGED: ${{ steps.filter.outputs.web }}
+          WEB_CHANGED: ${{ steps.filter.outputs.web }}
         run: |
           set -euo pipefail
           if [[ "$CORE_CHANGED" == "true" ]]; then
             # Core or root pom changed: run the full active matrix.
-            modules='["desktop"]'
-            # When web rejoins, swap the line above for:
-            # modules='["desktop","web"]'
+            modules='["desktop","web"]'
           else
             mods=()
             [[ "$DESKTOP_CHANGED" == "true" ]] && mods+=('"desktop"')
-            # [[ "$WEB_CHANGED" == "true" ]] && mods+=('"web"')
+            [[ "$WEB_CHANGED" == "true" ]] && mods+=('"web"')
             if [[ ${#mods[@]} -eq 0 ]]; then
               modules='[]'
             else
