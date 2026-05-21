@@ -106,10 +106,22 @@ Or use the convenience wrapper to package and launch in one step:
 
 ### Running the Web Layer
 
-HappyCamper ships a Spring Boot service (`happycamper-web`) that exposes the same enhancement pipeline over HTTP. Run it from source:
+HappyCamper ships a Spring Boot service (`happycamper-web`) that exposes the same enhancement pipeline over HTTP.
+
+The web module depends on `happycamper-core` as a regular Maven dependency, so the core jar must be in `~/.m2/repository` before `spring-boot:run` can resolve it. `mvn -pl happycamper-web -am spring-boot:run` does not work because Maven tries to resolve the `spring-boot:` plugin prefix against the parent pom, which does not declare it. The reliable pattern is install-then-run:
 
 ```bash
-mvn -pl happycamper-web -am spring-boot:run
+# First time, or any time happycamper-core changes:
+mvn install -DskipTests
+
+# Then run (subsequent runs only need this command):
+mvn -pl happycamper-web spring-boot:run
+```
+
+Or use the convenience wrapper:
+```bash
+./run-web.sh          # install + run (safe default)
+./run-web.sh -s       # skip install, fast loop when iterating on web only
 ```
 
 The service listens on `http://localhost:8080` by default. Submit a camper roster + activity roster and get the enriched CSV plus the assertion report as JSON:
@@ -122,7 +134,7 @@ curl -F camperFile=@happycamper-web/src/test/resources/testCamperRoster.csv \
 
 Optional: pass `features=...` to enable a subset (omit to run every registered feature). The response contract is locked in `docs/decisions/003-process-response-contract.md`.
 
-Or run the packaged fat-jar (built by `mvn clean verify`):
+Or run the packaged fat-jar (after `mvn install -DskipTests`):
 ```bash
 java -jar happycamper-web/target/happycamper-web-2.2.jar
 ```
