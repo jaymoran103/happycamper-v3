@@ -72,7 +72,15 @@ public class ImportUtils {
     /**
      * Parses an InputStream into a ParsedCSV object.
      * This is the stream-based entry point, to be used by the web layer.
-     * @param inputStream The stream to parse
+     *
+     * <p><b>Stream ownership:</b> this method takes ownership of {@code inputStream} and closes
+     * it before returning (the underlying try-with-resources on the {@code BufferedReader}).
+     * Callers that also wrap their stream in try-with-resources will trigger a double-close;
+     * this is safe with {@code FileInputStream} and with Spring/Tomcat {@code MultipartFile}
+     * implementations (their {@code close()} is a no-op on the second call). Resolved as
+     * documented behavior — see {@code -PLANNING/known-issues.md} ISSUE-02.
+     *
+     * @param inputStream The stream to parse (closed by this method)
      * @param sourceName A display name for the source, used in error messages
      * @return ParsedCSV object containing the parsed data
      * @throws RosterException if an error occurs during parsing
