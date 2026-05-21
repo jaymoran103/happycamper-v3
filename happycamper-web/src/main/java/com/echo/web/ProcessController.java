@@ -13,11 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.echo.assertion.AssertionReport;
@@ -127,18 +125,6 @@ public class ProcessController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Translates Spring's {@link MaxUploadSizeExceededException} (thrown by the multipart parser
-     * when a file or request exceeds {@code spring.servlet.multipart.max-file-size} /
-     * {@code max-request-size}) into a 413 with the contract-shaped {@code {error: string}} body.
-     * Otherwise Spring's default handler returns a 500 with no body, which is misleading.
-     */
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, String>> handleUploadTooLarge(MaxUploadSizeExceededException e) {
-        LOG.warn("Multipart upload rejected: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(Map.of("error", "Upload exceeds maximum allowed size: " + e.getMessage()));
-    }
 
     /**
      * When the caller does not supply a {@code features} param, default to enabling every
